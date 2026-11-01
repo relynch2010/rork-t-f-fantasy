@@ -99,10 +99,15 @@ struct MeetRow: View {
                 if meet.isArchived {
                     Text("ARCHIVED").font(.system(size: 10, weight: .heavy)).foregroundStyle(Theme.faint)
                 }
-                LiveStatusPill(status: meet.status, compact: true)
+                LiveStatusPill(status: meet.displayStage, compact: true)
             }
-            Text("Week \(meet.week)\(meet.date.isEmpty ? "" : " • \(Fmt.isoDay(meet.date))") • \(meet.providerLabel)")
-                .font(.caption).foregroundStyle(Theme.muted)
+            if let when = meet.whenLabel {
+                Text("Matchup \(meet.week) • \(when)")
+                    .font(.caption).foregroundStyle(Theme.muted)
+            } else {
+                Text("Week \(meet.week)\(meet.date.isEmpty ? "" : " • \(Fmt.isoDay(meet.date))") • \(meet.providerLabel)")
+                    .font(.caption).foregroundStyle(Theme.muted)
+            }
             if meet.sourceError != nil, meet.polling {
                 Label("Live source unavailable", systemImage: "exclamationmark.triangle.fill")
                     .font(.caption.weight(.semibold)).foregroundStyle(Theme.red)
@@ -124,6 +129,7 @@ struct MeetDetailView: View {
     @State private var confirmFinal: Bool = false
     @State private var confirmDelete: Bool = false
     @State private var confirmReprocess: Bool = false
+    @State private var lifecycleAction: MeetLifecycleAction?
 
     var body: some View {
         List {
@@ -141,12 +147,23 @@ struct MeetDetailView: View {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            LiveStatusPill(status: m.status)
+                            LiveStatusPill(status: m.displayStage)
+                            if m.correcting == true {
+                                Text("CORRECTION").font(.system(size: 10, weight: .heavy)).tracking(0.8).foregroundStyle(Theme.gold)
+                            }
                             Spacer()
                         }
                         Text(m.name).font(Theme.display(26))
-                        Text("\(league.weekLabel(m.week))\(m.date.isEmpty ? "" : " • \(Fmt.isoDay(m.date))") • \(m.providerLabel)")
-                            .font(.subheadline).foregroundStyle(Theme.muted)
+                        if let when = m.whenLabel {
+                            Label(when, systemImage: "clock").font(.subheadline.weight(.semibold)).foregroundStyle(.white.opacity(0.9))
+                            if let loc = m.location, !loc.isEmpty {
+                                Label(loc, systemImage: "mappin.and.ellipse").font(.subheadline).foregroundStyle(Theme.muted)
+                            }
+                            Text("Matchup \(m.week) • \(m.providerLabel)").font(.subheadline).foregroundStyle(Theme.muted)
+                        } else {
+                            Text("\(league.weekLabel(m.week))\(m.date.isEmpty ? "" : " • \(Fmt.isoDay(m.date))") • \(m.providerLabel)")
+                                .font(.subheadline).foregroundStyle(Theme.muted)
+                        }
                         if let info = m.sourceInfo {
                             Label("Verified: \(info.name) · \(info.date) · \(info.location)", systemImage: "checkmark.seal.fill")
                                 .font(.caption.weight(.semibold)).foregroundStyle(Theme.green)
@@ -165,6 +182,17 @@ struct MeetDetailView: View {
                                 .font(.caption).foregroundStyle(Theme.muted)
                         }
                         .listRowBackground(Theme.redRow)
+                    }
+                }
+
+                if let card = stageCard(m) {
+                    Section {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label(card.title, systemImage: card.icon)
+                                .font(.system(size: 13, weight: .heavy)).foregroundStyle(card.tint)
+                            Text(card.body).font(.subheadline)
+                        }
+                        .listRowBackground(Theme.surface)
                     }
                 }
 
@@ -234,11 +262,14 @@ struct MeetDetailView: View {
 
                 if canEdit && !m.isArchived {
                 Section {
+                    if m.isScheduled && !m.isFinal {
+                        lifecycleButtons(m)
+                    }
                     if m.polling {
                         controlButton("STOP LIVE SCORING", "stop.fill", Theme.gold) {
                             Task { await store.perform(["type": "stopLive", "meetId": m.id], success: "Live scoring stopped") }
                         }
-                    } else if !m.isFinal {
+                    } else if !m.isFinal && m.lifecycle == nil && !m.isPending {
                         controlButton("START LIVE SCORING", "dot.radiowaves.left.and.right", Theme.green) {
                             Task { await store.perform(["type": "startLive", "meetId": m.id], success: "Live scoring is on") }
                         }
@@ -250,17 +281,44 @@ struct MeetDetailView: View {
                         controlButton("Reprocess Meet", "arrow.triangle.2.circlepath", .white) { confirmReprocess = true }
                     }
                     if m.isFinal {
-                        controlButton("Reopen Meet", "arrow.uturn.backward", .white) {
-                            Task { await store.perform(["type": "reopenMeet", "meetId": m.id], success: "Meet reopened") }
+                        if m.isScheduled {
+                            controlButton("Correct Final Results", "arrow.uturn.backward", .white) { lifecycleAction = .reopen }
+                        } else {
+                            controlButton("Reopen Meet", "arrow.uturn.backward", .white) {
+                                Task { await store.perform(["type": "reopenMeet", "meetId": m.id], success: "Meet reopened") }
+                            }
                         }
-                    } else {
-                        controlButton("MARK FINAL", "flag.checkered", Theme.green) { confirmFinal = true }
+                    } else if m.isPending {
+                        if let at = m.finalEligibleAt, at <= store.serverNowMs {
+                            controlButton("MARK FINAL", "flag.checkered", Theme.green) { confirmFinal = true }
+                            if m.complete != true {
+                                controlButton("Finalize Anyway", "exclamationmark.triangle", Theme.gold) { lifecycleAction = .forceFinal }
+                            }
+                        }
+                    } else if m.lifecycle == nil || m.lifecycle == "INTERRUPTED" {
+                        controlButton(m.isScheduled ? "END MEET & START 24-HOUR HOLD" : "MARK FINAL", "flag.checkered", Theme.green) { confirmFinal = true }
                     }
                 } header: {
                     Text("Controls")
                 } footer: {
-                    Text(m.polling ? "Checking the source automatically for every league. Stops once the meet is final." : "Applies to every league. Placement points post only when an event's results are complete.")
+                    Text(m.isScheduled ? "Rosters lock at the official start. After the meet ends, results are held at least 24 hours (longer if they look incomplete) before they become final. Every change is logged." : m.polling ? "Checking the source automatically for every league. Stops once the meet is final." : "Applies to every league. Placement points post only when an event's results are complete.")
                 }
+                }
+
+                if let changes = m.changes, !changes.isEmpty {
+                    Section("Change Log") {
+                        ForEach(Array(changes.reversed().enumerated()), id: \.offset) { _, c in
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack {
+                                    Text(MeetLifecycleAction.kindLabel(c.kind)).font(.system(size: 13, weight: .heavy))
+                                    Spacer()
+                                    Text(Fmt.dateTime(c.at)).font(.caption.monospacedDigit()).foregroundStyle(Theme.faint)
+                                }
+                                if !c.detail.isEmpty { Text(c.detail).font(.caption).foregroundStyle(Theme.muted) }
+                            }
+                            .listRowBackground(Theme.surface)
+                        }
+                    }
                 }
 
                 if canEdit {
@@ -286,10 +344,17 @@ struct MeetDetailView: View {
         .screenBackground()
         .navigationTitle("Meet")
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog("Mark this meet final?", isPresented: $confirmFinal, titleVisibility: .visible) {
-            Button("Mark Final") { Task { await store.perform(["type": "markFinal", "meetId": meetId], success: "Meet is final") } }
+        .confirmationDialog(finalTitle, isPresented: $confirmFinal, titleVisibility: .visible) {
+            Button(finalTitle.contains("hold") ? "End Meet" : "Mark Final") {
+                Task { await store.perform(["type": "markFinal", "meetId": meetId], success: finalTitle.contains("hold") ? "Meet ended. Pending finalization" : "Meet is final") }
+            }
         } message: {
-            Text("Runs one last check, awards final placements, and stops live scoring.")
+            Text(finalTitle.contains("hold") ? "Runs one last check and starts the 24-hour pending period. Scores aren't final until it ends." : "Runs one last check, awards final placements, and stops live scoring.")
+        }
+        .sheet(item: $lifecycleAction) { action in
+            if let m = store.league?.allMeets.first(where: { $0.id == meetId }) {
+                MeetLifecycleSheet(meet: m, action: action)
+            }
         }
         .confirmationDialog("Reprocess this meet?", isPresented: $confirmReprocess, titleVisibility: .visible) {
             Button("Reprocess in Every League") { Task { await store.perform(["type": "reprocessMeet", "meetId": meetId], success: "Reprocessing in every league") } }
@@ -304,6 +369,56 @@ struct MeetDetailView: View {
             }
         } message: {
             Text("Every fantasy point from this meet is removed. Commissioner corrections are kept.")
+        }
+    }
+
+    private var finalTitle: String {
+        guard let m = store.league?.allMeets.first(where: { $0.id == meetId }) else { return "Mark this meet final?" }
+        return m.isScheduled && !m.isPending && m.correcting != true ? "End the meet and start the 24-hour hold?" : "Mark this meet final?"
+    }
+
+    private struct StageCard { let title: String; let icon: String; let tint: Color; let body: String }
+
+    private func stageCard(_ m: Meet) -> StageCard? {
+        guard m.isScheduled else { return nil }
+        switch m.displayStage {
+        case "SCHEDULED":
+            return StageCard(title: "SCHEDULED", icon: "calendar", tint: Theme.sprint, body: "Rosters lock at the official start\(m.whenLabel.map { ": \($0)" } ?? ""). Lineup changes, adds and drops are open until then.")
+        case "LIVE":
+            return StageCard(title: "LIVE • ROSTERS LOCKED", icon: "lock.fill", tint: Theme.red, body: "Rosters locked at the official start. Scores update as results come in.")
+        case "PENDING":
+            let at = m.finalEligibleAt.map { Fmt.dateTime($0) } ?? "soon"
+            return StageCard(title: "PENDING FINALIZATION", icon: "hourglass", tint: Theme.flex, body: m.complete == false ? "Results look incomplete. The commissioner needs to check them before this can become final (earliest \(at))." : "Scores can still change. They become final no earlier than \(at).")
+        case "POSTPONED":
+            return StageCard(title: "POSTPONED", icon: "calendar.badge.clock", tint: Theme.gold, body: "Rosters are unlocked. The matchup stays the same and waits for the new date.")
+        case "CANCELED":
+            return StageCard(title: "CANCELED", icon: "xmark.circle", tint: Theme.muted, body: "This meet won't happen. Its matchup closed with the points it had.")
+        case "INTERRUPTED":
+            return StageCard(title: "INTERRUPTED", icon: "pause.circle", tint: Theme.gold, body: "Rosters stay locked. Resume the meet when competition restarts.")
+        case "FINAL":
+            return m.correcting == true ? StageCard(title: "CORRECTING FINAL RESULTS", icon: "pencil.circle", tint: Theme.gold, body: "Fix the results, then Mark Final again.") : nil
+        default:
+            return nil
+        }
+    }
+
+    @ViewBuilder
+    private func lifecycleButtons(_ m: Meet) -> some View {
+        switch m.lifecycle {
+        case "POSTPONED", "CANCELED":
+            controlButton("Reschedule", "calendar.badge.plus", Theme.green) { lifecycleAction = .reschedule }
+            if m.lifecycle == "POSTPONED" {
+                controlButton("Cancel Meet", "xmark.circle", Theme.red) { lifecycleAction = .cancel }
+            }
+        case "INTERRUPTED":
+            controlButton("Resume Meet", "play.circle", Theme.green) { lifecycleAction = .resume }
+            controlButton("Postpone", "calendar.badge.clock", Theme.gold) { lifecycleAction = .postpone }
+            controlButton("Cancel Meet", "xmark.circle", Theme.red) { lifecycleAction = .cancel }
+        default:
+            if m.isLive { controlButton("Interrupt (weather, delay)", "pause.circle", Theme.gold) { lifecycleAction = .interrupt } }
+            controlButton("Postpone", "calendar.badge.clock", Theme.gold) { lifecycleAction = .postpone }
+            controlButton("Reschedule", "calendar.badge.plus", .white) { lifecycleAction = .reschedule }
+            controlButton("Cancel Meet", "xmark.circle", Theme.red) { lifecycleAction = .cancel }
         }
     }
 
@@ -352,6 +467,16 @@ struct MeetEditorView: View {
     @State private var feedResults: String = ""
     @State private var test: MeetTestResult?
     @State private var isTesting: Bool = false
+    @State private var location: String = ""
+    @State private var scheduled: Bool = true
+    @State private var hadSchedule: Bool = false
+    @State private var startAt: Date = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: .now.addingTimeInterval(86_400)) ?? .now
+    @State private var endAt: Date = Calendar.current.date(bySettingHour: 17, minute: 0, second: 0, of: .now.addingTimeInterval(86_400)) ?? .now
+    @State private var timeZone: String = TimeZone.current.identifier
+
+    /// School leagues schedule their own meets (start, end, time zone). Main League meets keep the original flow.
+    private var schedulesOwnMeets: Bool { store.league?.ownsMeets == true && currentMeet?.isGlobal != true }
+    private var meetStarted: Bool { (currentMeet?.startAt ?? .infinity) <= store.serverNowMs }
 
     var body: some View {
         Form {
@@ -363,15 +488,34 @@ struct MeetEditorView: View {
             }
             Section("Meet") {
                 TextField("Meet name", text: $name)
-                DatePicker("Meet date", selection: $date, displayedComponents: .date)
+                if schedulesOwnMeets {
+                    TextField("Location (optional)", text: $location)
+                } else {
+                    DatePicker("Meet date", selection: $date, displayedComponents: .date)
+                }
                 if let league = store.league {
-                    Stepper("Week: \(week)", value: $week, in: 1...max(1, max(league.totalWeeks, league.settings.regularWeeks, league.global?.settings?.regularWeeks ?? 0) + 4))
+                    Stepper(schedulesOwnMeets ? "Matchup: \(week)" : "Week: \(week)", value: $week, in: 1...max(1, max(league.totalWeeks, league.settings.regularWeeks, league.global?.settings?.regularWeeks ?? 0) + 4))
                 }
                 Picker("Provider", selection: $provider) {
                     Text("AthleticLIVE").tag("ATHLETICLIVE")
                     Text("Paste feed").tag("MANUAL")
                 }
                 LabeledContent("Status", value: currentStatus)
+            }
+
+            if schedulesOwnMeets {
+                Section {
+                    Toggle("Set start & end time", isOn: $scheduled)
+                        .disabled(meetStarted)
+                    if scheduled {
+                        MeetTimeFields(start: $startAt, end: $endAt, timeZone: $timeZone)
+                            .disabled(meetStarted)
+                    }
+                } header: {
+                    Text("Schedule")
+                } footer: {
+                    Text(meetStarted ? "This meet already started. Use Postpone or Reschedule on the meet screen to change its time." : scheduled ? "Times are the meet's local times in the zone you pick (daylight saving handled). Rosters lock at the start. After the end, results are held at least 24 hours before they're final." : "Without a start time, rosters follow the per-event locks and you mark the meet final yourself.")
+                }
             }
 
             if provider == "ATHLETICLIVE" {
@@ -490,7 +634,7 @@ struct MeetEditorView: View {
     }
 
     private var currentStatus: String {
-        store.league?.allMeets.first { $0.id == meetId }?.status ?? "UPCOMING"
+        store.league?.allMeets.first { $0.id == meetId }?.displayStage ?? (schedulesOwnMeets && scheduled ? "SCHEDULED" : "UPCOMING")
     }
 
     private func urlField(_ label: String, _ text: Binding<String>) -> some View {
@@ -535,9 +679,31 @@ struct MeetEditorView: View {
         resultsUrl = m.resultsUrl
         sourceUrl = m.sourceUrl ?? ""
         showAdvanced = sourceUrl.isEmpty && !resultsUrl.isEmpty
+        location = m.location ?? ""
+        hadSchedule = m.isScheduled
+        scheduled = m.isScheduled
+        if let tz = m.timeZone { timeZone = tz }
+        if let s = MeetTime.date(m.startLocal) { startAt = s }
+        if let e = MeetTime.date(m.endLocal) { endAt = e }
     }
 
     private func fields() -> [String: Any] {
+        var out = baseFields()
+        guard schedulesOwnMeets else { return out }
+        out["location"] = location.trimmingCharacters(in: .whitespacesAndNewlines)
+        if meetStarted { return out }
+        if scheduled {
+            out["startLocal"] = MeetTime.local(startAt)
+            out["endLocal"] = MeetTime.local(max(endAt, startAt))
+            out["timeZone"] = timeZone
+            out["date"] = String(MeetTime.local(startAt).prefix(10))
+        } else if hadSchedule {
+            out["clearSchedule"] = true
+        }
+        return out
+    }
+
+    private func baseFields() -> [String: Any] {
         [
             "name": name.trimmingCharacters(in: .whitespaces),
             "date": EventCatalog.iso(date),

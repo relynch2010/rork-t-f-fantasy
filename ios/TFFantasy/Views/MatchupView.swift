@@ -175,6 +175,7 @@ struct MatchupView: View {
                     }
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(Theme.muted)
+                    pointsLegend(isFinal: isFinal, pending: league.meet(forWeek: week)?.isPending == true)
                     if !isFinal, proj?.stale == true {
                         Label("Live source is down. Showing the last good projection.", systemImage: "wifi.exclamationmark")
                             .font(.caption2).foregroundStyle(Theme.gold)
@@ -192,6 +193,22 @@ struct MatchupView: View {
     private func pct(_ v: Double?) -> String {
         guard let v else { return "–" }
         return v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))%" : String(format: "%.1f%%", v)
+    }
+
+    /// Projected vs actual vs finalized, spelled out under every matchup.
+    private func pointsLegend(isFinal: Bool, pending: Bool) -> some View {
+        HStack(spacing: 6) {
+            Text(isFinal ? "FINALIZED" : pending ? "ACTUAL · PENDING" : "ACTUAL")
+                .font(.system(size: 9, weight: .black)).tracking(0.8)
+                .foregroundStyle(isFinal ? Theme.gold : Theme.green)
+                .padding(.horizontal, 6).padding(.vertical, 2)
+                .overlay(Capsule().strokeBorder(isFinal ? Theme.gold : Theme.green, lineWidth: 1))
+            Text(isFinal ? "Scores are final and locked." : pending ? "Real results, waiting to be finalized. PROJ is an estimate and never counts." : "Big numbers are real results. PROJ is an estimate and never counts.")
+                .font(.caption2)
+                .foregroundStyle(Theme.muted)
+                .lineLimit(2)
+            Spacer(minLength: 0)
+        }
     }
 
     private func projLine(_ total: Double) -> some View {

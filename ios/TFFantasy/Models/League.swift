@@ -59,7 +59,7 @@ nonisolated struct Athlete: Codable, Identifiable, Hashable, Sendable {
 
 /// Commissioner-set availability. Only IR and Out may sit in the IR spot.
 nonisolated enum PlayerStatus: String, CaseIterable, Identifiable, Hashable, Sendable {
-    case active, Q, O, IR
+    case active, Q, D, O, IR
 
     var id: String { rawValue }
     var tag: String? { self == .active ? nil : rawValue }
@@ -67,6 +67,7 @@ nonisolated enum PlayerStatus: String, CaseIterable, Identifiable, Hashable, Sen
         switch self {
         case .active: return "Active"
         case .Q: return "Questionable"
+        case .D: return "Doubtful"
         case .O: return "Out"
         case .IR: return "IR"
         }
@@ -518,6 +519,16 @@ nonisolated struct LeagueState: Codable, Hashable, Sendable {
     let runsOwnMeets: Bool?
     /// Players the commissioner removed from this league's pool (commissioner only).
     let excludedAthletes: [ExcludedAthlete]?
+    /// "indoor" / "outdoor" (nil on older leagues).
+    let seasonType: String?
+    /// e.g. "2026 Outdoor".
+    let seasonLabel: String?
+    /// Finished seasons, newest first.
+    let archives: [SeasonArchiveMeta]?
+    /// The viewer may archive this season and start a new one (school leagues only).
+    let canStartNewSeason: Bool?
+    /// Pre-draft with an odd team count: the draft can't start yet.
+    let evenTeamsNeeded: Bool?
 
     var isMain: Bool { isMainLeague ?? false }
     var schoolName: String { school ?? "Cornwall Central" }
@@ -755,6 +766,8 @@ extension LeagueState {
             return round
         }
         if week > settings.regularWeeks, let name = bracket?.rounds.first(where: { $0.week == week })?.name { return name }
+        // School leagues: each meet is its own matchup, so the matchup carries the meet's name.
+        if ownsMeets, let m = meet(forWeek: week), !m.name.isEmpty { return m.name }
         return "Week \(week)"
     }
 
@@ -900,4 +913,43 @@ nonisolated struct ImportResult: Codable, Hashable, Sendable {
     let rows: [ImportRowResult]
     let summary: ImportSummary
     let repeated: Bool?
+}
+
+
+/// A finished season kept in the league's archive.
+nonisolated struct SeasonArchiveMeta: Codable, Hashable, Sendable, Identifiable {
+    let id: String
+    let label: String
+    let seasonType: String?
+    let season: Int
+    let champion: String?
+    let teams: Int
+    let finishedAt: Double
+    let endedEarly: Bool
+}
+
+/// The full copy of a finished season (read-only).
+nonisolated struct SeasonArchive: Codable, Sendable {
+    struct Standing: Codable, Sendable, Hashable { let rank: Int; let teamId: String; let teamName: String; let ownerName: String; let wins: Int?; let losses: Int?; let ties: Int?; let pointsFor: Double? }
+    struct Match: Codable, Sendable, Hashable { let week: Int; let kind: String?; let label: String; let home: String?; let away: String?; let homeScore: Double?; let awayScore: Double?; let final: Bool? }
+    struct Roster: Codable, Sendable, Hashable { let teamId: String; let teamName: String; let ownerName: String; let athletes: [String] }
+    struct Move: Codable, Sendable, Hashable { let at: Double; let kind: String; let text: String }
+    let id: String
+    let label: String
+    let champion: String?
+    let finishedAt: Double
+    let endedEarly: Bool
+    let standings: [Standing]
+    let matchups: [Match]
+    let rosters: [Roster]
+    let transactions: [Move]
+}
+
+/// A league whose commissioner is deleting their account and must pick a successor.
+nonisolated struct HandoffNeed: Codable, Sendable, Identifiable, Hashable {
+    struct Member: Codable, Sendable, Hashable, Identifiable { let teamId: String; let teamName: String; let ownerName: String; var id: String { teamId } }
+    let leagueId: String
+    let name: String
+    let others: [Member]
+    var id: String { leagueId }
 }

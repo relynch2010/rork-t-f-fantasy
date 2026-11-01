@@ -16,6 +16,9 @@ struct CommissionerView: View {
                     Text("Only the commissioner can use these tools.").listRowBackground(Theme.surface)
                 } else {
                     Section {
+                        link(.guide, "book.closed.fill", "Commissioner Guide", "24 short how-tos · searchable", tint: Theme.green)
+                    }
+                    Section {
                         if league.canEditGlobalSettings {
                             link(.adminPanel, "lock.shield.fill", "Admin Panel", league.isMain ? "Scoring drafts, projection health, data checks, change history" : "Sandbox for this league only · Main League untouched", tint: Theme.gold)
                         }
@@ -71,7 +74,7 @@ struct CommissionerView: View {
                             link(.schedule, "calendar", "Season Schedule", "Every week's matchups, checks, and confirmed changes", tint: Theme.green)
                         }
                         link(.draft, "list.number", "Draft Controls", league.phaseKind == .predraft ? "Set order, start the draft" : "Draft results")
-                        link(.manageTeams, "person.2", "Manage Teams", "Remove a team, change commissioner")
+                        link(.manageTeams, "person.2", "Manage Teams", league.evenTeamsNeeded ?? false ? "\(league.teams.count) teams · the draft needs an even number" : "Remove a team, change commissioner", tint: league.evenTeamsNeeded ?? false ? Theme.gold : Theme.green)
                         link(.athletes, "figure.run", "Athlete Editor", league.ownsMeets ? "\(league.athletes.count) \(league.schoolName) athletes · import a roster" : (league.canEditPlayers ?? false) ? "\(league.athletes.count) athletes — master player database (every league)" : "Set by the Main League. View only", tint: (league.canEditPlayers ?? false) ? Theme.green : Theme.muted)
                         let flagged = (league.adpReview ?? []).filter(\.needsReview).count
                         link(.adpReview, "list.star", "Draft Rankings", flagged == 0 ? "ADP order for the draft room" : "\(flagged) names need review", tint: flagged > 0 ? Theme.gold : Theme.green)
@@ -79,6 +82,7 @@ struct CommissionerView: View {
                     } header: {
                         Text("League · \(league.schoolName)")
                     }
+                    SeasonToolsSection(league: league)
                     Section {
                         if league.phaseKind != .predraft || !league.draft.picks.isEmpty {
                             action("arrow.counterclockwise", "Reset Draft", "Erase draft picks and rosters for this league only", Theme.red) { confirmReset = true }
@@ -204,7 +208,7 @@ struct EditSettingsView: View {
                     Text(!pre ? "Draft settings lock once the draft starts." : draftTimeLocked(league) ? "The draft time is locked. It's less than 30 minutes away." : "Snake draft, 6 rounds. The draft time can be changed until 30 minutes before it starts.")
                 }
                 Section {
-                    MainLeagueBanner(text: league.canEditGlobalSettings ? "You're the Main League commissioner. Change these for every league in Global Game Settings." : "Scoring, season length, playoffs, waivers, trades and lineup rules are the same in every league.")
+                    MainLeagueBanner(text: league.canEditGlobalSettings ? "You're the platform commissioner. Change these for every league in Global Game Settings." : "Scoring, season length, playoffs, waivers, trades and lineup rules are the same in every league.")
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                     let s = league.settings

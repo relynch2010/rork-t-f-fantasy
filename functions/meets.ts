@@ -97,6 +97,26 @@ export type Meet = {
   sourceInfo?: { name: string; date: string; location: string; timer: string; url: string } | null;
   /** Last Test Connection outcome (global). */
   lastTest?: { at: number; ok: boolean; message: string; results: number; matched: number } | null;
+  /** Scheduled meets (Stage 2): venue, official start/end (UTC ms), the meet's local IANA time zone. */
+  location?: string;
+  startAt?: number | null;
+  endAt?: number | null;
+  timeZone?: string;
+  /** The local wall-clock times the commissioner entered ("YYYY-MM-DDTHH:mm" in `timeZone`). */
+  startLocal?: string;
+  endLocal?: string;
+  /** Postponed / canceled / interrupted overlay on top of `status`. The matchup (week) never changes. */
+  lifecycle?: "POSTPONED" | "CANCELED" | "INTERRUPTED" | null;
+  /** Pending finalization since (results held at least 24 hours before FINAL). */
+  pendingSince?: number | null;
+  /** A final meet reopened for a correction (waits for the commissioner's Mark Final, no new hold). */
+  correcting?: number | null;
+  /** The last import showed every listed event complete. */
+  complete?: boolean;
+  /** The commissioner was told the hold ended with incomplete results (once per pending window). */
+  holdNotified?: number | null;
+  /** Schedule changes and corrections, newest last. */
+  changes?: { at: number; by: string; kind: string; detail: string }[];
   /** Demo meets only: simulated totals that never touch real scoring. */
   demo?: { teams: { teamId: string; points: number }[]; athletes: { athleteId: string; points: number; events: number }[] } | null;
 };

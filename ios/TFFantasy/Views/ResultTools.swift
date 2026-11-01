@@ -588,7 +588,7 @@ struct StandardsView: View {
                 Text("Official qualifying marks for every league. Only the highest standard counts, up to the season cap per athlete; moving up awards just the difference.")
             }
             if store.league?.canEditGlobalSettings != true {
-                Section { MainLeagueBanner(text: "Standards are the same in every league. Only the Main League commissioner can change them.") }
+                Section { MainLeagueBanner(text: "Standards are the same in every league. Only the platform commissioner can change them.") }
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
             }

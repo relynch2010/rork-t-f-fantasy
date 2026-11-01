@@ -27,7 +27,7 @@ struct ScoringRulesEditorView: View {
     var body: some View {
         Form {
             if !canEdit {
-                Section { MainLeagueBanner(text: "Scoring is the same in every league. Only the Main League commissioner can change it.") }
+                Section { MainLeagueBanner(text: "Scoring is the same in every league. Only the platform commissioner can change it.") }
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
             }

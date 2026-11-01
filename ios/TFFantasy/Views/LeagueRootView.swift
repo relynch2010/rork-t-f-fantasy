@@ -45,6 +45,9 @@ enum LeagueRoute: Hashable {
     case schedule
     case adminPanel
     case adminScoring(AdminAccess)
+    case pastSeasons
+    case guide
+    case seasonArchive(String)
 }
 
 struct LeagueRootView: View {
@@ -169,6 +172,9 @@ struct LeagueStack<Root: View>: View {
         case .schedule: ScheduleView()
         case .adminPanel: AdminPanelView()
         case .adminScoring(let access): ScoringRulesEditorView(admin: access)
+        case .pastSeasons: PastSeasonsView()
+        case .guide: CommissionerGuideView()
+        case .seasonArchive(let id): SeasonArchiveView(archiveId: id)
         }
     }
 }

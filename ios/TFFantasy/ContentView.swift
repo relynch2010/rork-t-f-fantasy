@@ -11,6 +11,7 @@ struct ContentView: View {
     }
 
     var body: some View {
+        @Bindable var store = store
         Group {
             if store.user == nil {
                 OnboardingView()
@@ -31,6 +32,7 @@ struct ContentView: View {
             }
         }
         .animation(.easeOut(duration: 0.45), value: store.isBooting)
+        .fullScreenCover(isPresented: $store.showHowItWorks) { HowItWorksView() }
         .preferredColorScheme(.dark)
         .tint(Theme.green)
         .overlay(alignment: .top) {

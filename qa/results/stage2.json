@@ -1,0 +1,193 @@
+{
+ "checks": [
+  {
+   "name": "Test leagues drafted (2 teams, even)",
+   "pass": true,
+   "detail": "season"
+  },
+  {
+   "name": "Meet scheduled with location, local start/end and time zone",
+   "pass": true,
+   "detail": " (1793571960000, 1793571960000)"
+  },
+  {
+   "name": "New meet shows as Scheduled",
+   "pass": true,
+   "detail": "SCHEDULED"
+  },
+  {
+   "name": "Two meets can't share one matchup week",
+   "pass": true,
+   "detail": "Week 1 already has QA Meetville Opener. Each meet is its own matchup \u2014 pick another week."
+  },
+  {
+   "name": "End before start is rejected",
+   "pass": true,
+   "detail": "The meet has to end after it starts."
+  },
+  {
+   "name": "Unknown time zone is rejected",
+   "pass": true,
+   "detail": "Pick the meet's time zone."
+  },
+  {
+   "name": "Member can't schedule a meet",
+   "pass": true,
+   "detail": "Only the commissioner can do that."
+  },
+  {
+   "name": "Meet isn't visible in the other league on the same school",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "Before the start, lineups can still change",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "Member can't postpone a meet",
+   "pass": true,
+   "detail": "Only the commissioner can do that."
+  },
+  {
+   "name": "At the official start, rosters lock",
+   "pass": true,
+   "detail": "Gus Meetwell6 is locked (QA Meetville Opener started 18:26). Locked players can't be moved, benched, dropped, added or traded until the week is final."
+  },
+  {
+   "name": "Started meet shows as Live",
+   "pass": true,
+   "detail": "LIVE"
+  },
+  {
+   "name": "League B (no meet) isn't locked",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "Postponed: status, same week, logged",
+   "pass": true,
+   "detail": "None"
+  },
+  {
+   "name": "Postponing lifts the roster lock",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "A postponed meet can't go live",
+   "pass": true,
+   "detail": "QA Meetville Opener is postponed. Reschedule it first."
+  },
+  {
+   "name": "Rescheduled: new time, same matchup week, logged",
+   "pass": true,
+   "detail": "None"
+  },
+  {
+   "name": "Rescheduled meet locks rosters at its new start",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "Interrupted: shows Interrupted, rosters stay locked",
+   "pass": true,
+   "detail": "None"
+  },
+  {
+   "name": "Resumed: back to Live",
+   "pass": true,
+   "detail": "None LIVE"
+  },
+  {
+   "name": "Mark Final on a scheduled meet starts Pending finalization (not Final)",
+   "pass": true,
+   "detail": "None PENDING"
+  },
+  {
+   "name": "Hold lasts at least 24 hours after the official end",
+   "pass": true,
+   "detail": "24.00 h"
+  },
+  {
+   "name": "Finalizing during the 24-hour hold is refused",
+   "pass": true,
+   "detail": "QA Meetville Opener is pending finalization. Results are held at least 24 hours after the meet; about 25 hours to go."
+  },
+  {
+   "name": "Even a forced finalize waits out the 24-hour hold",
+   "pass": true,
+   "detail": "QA Meetville Opener is pending finalization. Results are held at least 24 hours after the meet; about 25 hours to go."
+  },
+  {
+   "name": "Matchup stays open while the meet is pending",
+   "pass": true,
+   "detail": "[(1, False)]"
+  },
+  {
+   "name": "A meet that already ended can still be postponed only explicitly (logged)",
+   "pass": true,
+   "detail": "None"
+  },
+  {
+   "name": "Canceled meet shows Canceled and is logged",
+   "pass": true,
+   "detail": "None"
+  },
+  {
+   "name": "Canceling closes the same matchup (no new matchup created)",
+   "pass": true,
+   "detail": "[(True, 0, 0)]"
+  },
+  {
+   "name": "A canceled meet can't be interrupted",
+   "pass": true,
+   "detail": "QA Meetville Rainout was canceled. Reschedule it to bring it back."
+  },
+  {
+   "name": "A meet without a start time still finalizes immediately (unchanged)",
+   "pass": true,
+   "detail": "None FINAL"
+  },
+  {
+   "name": "Reopening an old-style final meet works as before, recorded as a correction",
+   "pass": true,
+   "detail": "None"
+  },
+  {
+   "name": "Commissioner can set Doubtful",
+   "pass": true,
+   "detail": "None"
+  },
+  {
+   "name": "Doubtful shows in the other league on the same school",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "Member can't set a status",
+   "pass": true,
+   "detail": "Only the commissioner can do that."
+  },
+  {
+   "name": "Postpone, reschedule, interrupt, resume and pending are in the audit log",
+   "pass": true,
+   "detail": "league audit log (commissioner view): meet.create, meet.postpone, meet.reschedule, meet.interrupt, meet.resume, meet.pending, meet.final, meet.correction, school.setStatus"
+  },
+  {
+   "name": "Main League shared meets carry no schedule changes (no start times set)",
+   "pass": true,
+   "detail": "7 meets"
+  },
+  {
+   "name": "Main League weeks map one-to-one to meets",
+   "pass": true,
+   "detail": "{1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1}"
+  }
+ ],
+ "notes": [
+  "Audit check first queried the platform-admin audit tool (403 as expected for a league commissioner); re-verified from the league commissioner audit log.",
+  "24-hour hold expiry and DST lock timing are covered by functions/tests/schedule.test.ts (cannot be waited out live)."
+ ]
+}

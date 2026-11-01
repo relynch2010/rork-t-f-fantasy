@@ -47,6 +47,8 @@ final class AppStore {
     var league: LeagueState?
     var activeLeagueId: String?
     var errorMessage: String?
+    /// The short how-it-works walkthrough (shown once after sign-up; reopenable from Settings).
+    var showHowItWorks: Bool = false
     var toast: String?
     var isBusy: Bool = false
     /// True until launch sign-in and loading finish (drives the splash screen).
@@ -177,7 +179,10 @@ final class AppStore {
 
     func signUp(email: String, password: String, name: String) async -> Bool {
         let ok = await authenticate { try await self.api.signUp(email: email, password: password, name: name) }
-        if ok { PasswordVault.save(password, userId: user?.id) }
+        if ok {
+            PasswordVault.save(password, userId: user?.id)
+            showHowItWorks = true
+        }
         return ok
     }
 
@@ -253,13 +258,65 @@ final class AppStore {
         prefs = NotificationPrefs()
     }
 
-    func deleteAccount() async {
+    /// Deletes the account. Leagues this account commissions need a successor first: the server answers 409 with the
+    /// list, which is returned here so the app can ask. Nothing is deleted until every league has one.
+    func deleteAccount(handoffs: [String: String] = [:]) async -> [HandoffNeed]? {
+        isBusy = true
+        defer { isBusy = false }
         do {
-            try await api.deleteAccount()
+            try await api.deleteAccount(handoffs: handoffs)
             signOut()
+            return nil
+        } catch let e as APIError where e.status == 409 {
+            struct Body: Decodable { let needsHandoff: [HandoffNeed]? }
+            if let data = e.body, let needs = (try? JSONDecoder().decode(Body.self, from: data))?.needsHandoff, !needs.isEmpty { return needs }
+            show(e)
+            return nil
         } catch {
             show(error)
+            return nil
         }
+    }
+
+    /// Leaves the active league (pre-draft only; a commissioner names a successor). Returns to Home on success.
+    func leaveLeague(successor: String?) async -> Bool {
+        guard let leagueId = activeLeagueId else { return false }
+        isBusy = true
+        defer { isBusy = false }
+        var body: [String: Any] = ["type": "leaveLeague"]
+        if let successor { body["newCommissionerTeamId"] = successor }
+        var failure: Error?
+        do { _ = try await api.action(leagueId: leagueId, body: body) } catch { failure = error }
+        // Once we're out the league view can't be read, so confirm with the server's league list.
+        let mine = try? await api.myLeagues()
+        if let mine, !mine.contains(where: { $0.leagueId == leagueId }) {
+            closeLeague()
+            flash("You left the league")
+            Haptics.success()
+            return true
+        }
+        show(failure ?? APIError(message: "You're still in this league. Try again.", status: 0))
+        return false
+    }
+
+    func transferPlatformRole(email: String) async -> Bool {
+        isBusy = true
+        defer { isBusy = false }
+        do {
+            try await api.globalAction(["type": "transferPlatformRole", "email": email, "confirm": "TRANSFER"])
+            if let id = activeLeagueId { activate(id) }
+            flash("Platform role transferred")
+            Haptics.success()
+            return true
+        } catch {
+            show(error)
+            return false
+        }
+    }
+
+    func seasonArchive(_ id: String) async -> SeasonArchive? {
+        guard let leagueId = activeLeagueId else { return nil }
+        do { return try await api.seasonArchive(leagueId: leagueId, id: id) } catch { show(error); return nil }
     }
 
     private func handleExpiredSession() {

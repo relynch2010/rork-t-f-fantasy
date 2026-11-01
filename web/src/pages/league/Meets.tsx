@@ -23,11 +23,14 @@ export default function Meets() {
   const anyPolling = league.meets.some((m) => m.polling);
   const anyPaused = league.meets.some((m) => m.scope === "global" && m.status === "LIVE" && !m.polling);
 
-  const status = (m: Meet) => (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-black", m.status === "LIVE" ? "bg-td-red/15 text-td-red" : m.status === "FINAL" ? "bg-td-surface2 text-muted-foreground" : "bg-td-green/15 text-td-green")}>
-      {m.status === "LIVE" && <LiveDot />}{m.status}
-    </span>
-  );
+  const status = (m: Meet) => {
+    const st = m.stage ?? m.status;
+    return (
+      <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-black", st === "LIVE" ? "bg-td-red/15 text-td-red" : st === "FINAL" || st === "CANCELED" ? "bg-td-surface2 text-muted-foreground" : st === "PENDING" || st === "POSTPONED" || st === "INTERRUPTED" ? "bg-td-gold/15 text-td-gold" : "bg-td-green/15 text-td-green")}>
+        {st === "LIVE" && <LiveDot />}{st === "PENDING" ? "PENDING FINALIZATION" : st}
+      </span>
+    );
+  };
 
   return (
     <div>

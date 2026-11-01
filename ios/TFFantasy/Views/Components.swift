@@ -119,7 +119,7 @@ struct LiveStatusPill: View {
 
     var body: some View {
         let isLive = status == "LIVE"
-        let color: Color = isLive ? Theme.red : status == "FINAL" ? Theme.muted : Theme.gold
+        let color: Color = isLive ? Theme.red : status == "FINAL" || status == "CANCELED" ? Theme.muted : status == "PENDING" ? Theme.flex : status == "SCHEDULED" ? Theme.sprint : Theme.gold
         HStack(spacing: 5) {
             if isLive {
                 Circle()
@@ -192,6 +192,17 @@ struct SlotSquare: View {
 }
 
 /// Q / O / IR tag shown next to a player's name everywhere.
+extension PlayerStatus {
+    /// Tag colour: Doubtful sits between Questionable (gold) and Out (red). Informational only.
+    var tint: Color {
+        switch self {
+        case .Q: return Theme.gold
+        case .D: return Theme.field
+        default: return Theme.red
+        }
+    }
+}
+
 struct StatusTag: View {
     let status: PlayerStatus
     var size: CGFloat = 10
@@ -200,10 +211,10 @@ struct StatusTag: View {
         if let tag = status.tag {
             Text(tag)
                 .font(.system(size: size, weight: .black).width(.condensed))
-                .foregroundStyle(status == .Q ? .black : .white)
+                .foregroundStyle(status == .Q || status == .D ? .black : .white)
                 .padding(.horizontal, 5)
                 .frame(height: size + 6)
-                .background(status == .Q ? Theme.gold : Theme.red, in: .rect(cornerRadius: 4))
+                .background(status.tint, in: .rect(cornerRadius: 4))
                 .accessibilityLabel(status.label)
         }
     }

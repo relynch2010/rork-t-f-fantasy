@@ -9,6 +9,7 @@ import {
 } from "./global";
 import { cleanScoring, keyOf, type PerformanceRule, type Standard } from "./scoring";
 import { OFFICIAL_TABLES_V2 } from "./tablesV2";
+import { applyLifecycle, finalGate, isScheduled, logChange, nextScheduleAt, scheduleTick } from "./schedule";
 
 /** Commissioner-approved (Oct 29 2026): merge the 5-tier tables into 2026–2032, add unseeded brackets, re-score 2026. */
 const TABLES_V2_ENABLED = true;
@@ -86,7 +87,7 @@ type ExportAthlete = {
 
 type LeagueExport = { id: string; name: string; createdAt: number; athletes: ExportAthlete[]; edits: Record<string, number> };
 
-const STATUSES = ["active", "Q", "O", "IR"] as const;
+const STATUSES = ["active", "Q", "D", "O", "IR"] as const;
 const cleanStatus = (v: unknown): MasterAthlete["status"] => (STATUSES as readonly string[]).includes(String(v)) ? (String(v) as MasterAthlete["status"]) : "active";
 const MAX_PHOTO_B64 = 120_000;
 
@@ -1175,6 +1176,8 @@ export class Directory extends DurableObject<DirEnv> {
   private async scheduleGlobalAlarm(): Promise<void> {
     const c = this.cfg;
     const times = (c?.meets ?? []).filter((m) => m.polling && m.nextSyncAt !== null).map((m) => m.nextSyncAt as number);
+    const now = Date.now();
+    for (const m of c?.meets ?? []) { const at = nextScheduleAt(m, now); if (at !== null) times.push(at); }
     if (times.length === 0) {
       await this.env.DO.deleteAlarm("Directory", "global").catch(() => undefined);
       return;
@@ -1232,11 +1235,18 @@ export class Directory extends DurableObject<DirEnv> {
       m.feedHash = h;
       m.feedChangedAt = now;
     }
+    m.complete = listed.length > 0 ? done : feed.results.trim().length > 0;
     if (m.status === "LIVE" && m.polling && done && m.feedChangedAt && now - m.feedChangedAt > c.live.autoFinalMinutes * 60_000) {
-      m.status = "FINAL"; m.polling = false; m.nextSyncAt = null; m.finalAt = now;
-      c.audit.push({ at: now, actorId: "source", actorName: "Live source", action: "meet.final", detail: `${m.name}: every event complete, marked final automatically` });
+      if (!isScheduled(m)) {
+        m.status = "FINAL"; m.polling = false; m.nextSyncAt = null; m.finalAt = now;
+        c.audit.push({ at: now, actorId: "source", actorName: "Live source", action: "meet.final", detail: `${m.name}: every event complete, marked final automatically` });
+      } else if (m.pendingSince == null && !m.lifecycle && !m.correcting) {
+        // Scheduled meets: complete results start the 24-hour hold; FINAL comes from the schedule clock.
+        m.pendingSince = now;
+        logChange(m, "Live source", "pending", "Every event complete: pending finalization", now);
+      }
     }
-    if (m.polling && m.startedAt !== null && now - m.startedAt > c.live.maxLiveHours * 3600_000) {
+    if (m.polling && m.startedAt !== null && now - m.startedAt > c.live.maxLiveHours * 3600_000 && m.pendingSince == null) {
       m.polling = false; m.nextSyncAt = null;
       m.sourceError = `Live scoring paused after ${c.live.maxLiveHours} hours. Mark it final or restart live scoring.`;
     }
@@ -1249,6 +1259,22 @@ export class Directory extends DurableObject<DirEnv> {
     const now = Date.now();
     const sync: string[] = [];
     let state = false;
+    for (const m of c.meets) {
+      // Stage 2 schedule clock for the Main League's scheduled meets (start → pending → final after the 24-hour hold).
+      const step = scheduleTick(m, now);
+      if (step === "pending") {
+        m.pendingSince = Math.min(now, m.endAt ?? now);
+        logChange(m, "Schedule", "pending", "Meet ended: pending finalization (held at least 24 hours)", now);
+        c.audit.push({ at: now, actorId: "schedule", actorName: "Schedule", action: "meet.pending", detail: `${m.name}: pending finalization` });
+        state = true;
+      } else if (step === "final") {
+        m.status = "FINAL"; m.polling = false; m.nextSyncAt = null; m.finalAt = now; m.correcting = null;
+        logChange(m, "Schedule", "final", "24-hour hold passed with complete results: final", now);
+        c.audit.push({ at: now, actorId: "schedule", actorName: "Schedule", action: "meet.final", detail: `${m.name}: final after the 24-hour hold` });
+        sync.push(m.id);
+        state = true;
+      }
+    }
     for (const m of c.meets) {
       if (!m.polling || m.nextSyncAt === null || m.nextSyncAt > now + 1000) continue;
       try {
@@ -1269,13 +1295,25 @@ export class Directory extends DurableObject<DirEnv> {
     }
   }
 
-  /** Asks the Main League who its commissioner is right now. Never trusts a client. */
+  /**
+   * The platform commissioner: controls universal scoring, scoring history, results integrations, identity conflicts and
+   * league oversight. Stage 3 separates it from "whoever commissions the Main League": the first time this runs it pins
+   * the Main League's current commissioner (the same person as before, so nothing changes for them), and from then on
+   * only `transferPlatformRole` moves it. Never taken from a client.
+   */
   private async mainCommissioner(c: GlobalConfig): Promise<string> {
+    if (c.platformPinned && c.mainCommissionerId) return c.mainCommissionerId;
     if (!c.mainLeagueId) return "";
     const r = await this.leagueFetch(c.mainLeagueId, "/global-whois");
     if (!r.ok) return "";
     const id = String(((await r.json()) as { commissionerId?: string }).commissionerId ?? "");
     c.mainCommissionerId = id;
+    if (id) {
+      c.platformPinned = true;
+      c.audit.push({ at: Date.now(), actorId: "system", actorName: "System", action: "platform.pin", detail: "Platform commissioner role separated from the Main League commissioner (same account)." });
+      await this.ctx.storage.put("globalConfig", c);
+      this.cfg = c;
+    }
     return id;
   }
 
@@ -1293,7 +1331,7 @@ export class Directory extends DurableObject<DirEnv> {
     if (!c.mainLeagueId) return this.gerr(`The Main League (${MAIN_LEAGUE_CODE}) wasn't found, so global settings can't be changed.`, 403);
     if (via && via !== c.mainLeagueId) return this.gerr("This is set by the Main League. Only the Main League commissioner can change it.", 403);
     const commish = await this.mainCommissioner(c);
-    if (!commish || commish !== user.id) return this.gerr("Only the Main League commissioner can change global settings.", 403);
+    if (!commish || commish !== user.id) return this.gerr("Only the platform commissioner can change global settings.", 403);
 
     const now = Date.now();
     const str = (k: string): string => String(action[k] ?? "").trim();
@@ -1382,6 +1420,16 @@ export class Directory extends DurableObject<DirEnv> {
           scoring = true;
           break;
         }
+        case "transferPlatformRole": {
+          if (str("confirm") !== "TRANSFER") throw new GlobalError("Type TRANSFER to confirm.");
+          const target = this.account(str("email").toLowerCase());
+          if (!target) throw new GlobalError("No account uses that email.");
+          if (target.id === user.id) throw new GlobalError("You already hold the platform commissioner role.");
+          c.mainCommissionerId = target.id;
+          c.platformPinned = true;
+          audit("platform.transfer", `Platform commissioner role: ${user.name} (${user.id}) → ${target.name} (${target.id})`);
+          break;
+        }
         case "updateRoster": {
           c.roster = cleanRoster((action.roster ?? action) as Record<string, unknown>, c.roster);
           audit("roster", JSON.stringify(c.roster));
@@ -1463,6 +1511,7 @@ export class Directory extends DurableObject<DirEnv> {
         }
         case "startLive": {
           const m = meet();
+          if (m.lifecycle) throw new GlobalError(m.lifecycle === "INTERRUPTED" ? `${m.name} is interrupted. Use Resume.` : `${m.name} is ${m.lifecycle === "POSTPONED" ? "postponed" : "canceled"}. Reschedule it first.`);
           if (m.provider === "ATHLETICLIVE" && !m.resultsUrl && !m.sourceMeetId && m.sourceUrl) await this.resolveGlobal(m);
           if (m.provider === "ATHLETICLIVE" && !m.resultsUrl && !m.sourceMeetId) throw new GlobalError(m.resolve && !m.resolve.ok ? m.resolve.message : "Add the meet's AthleticLIVE link, then test the connection.");
           m.status = "LIVE"; m.polling = true; m.startedAt = m.startedAt ?? now; m.finalAt = null; m.failures = 0;
@@ -1491,7 +1540,16 @@ export class Directory extends DurableObject<DirEnv> {
         }
         case "markFinal": {
           const m = meet();
-          m.status = "FINAL"; m.polling = false; m.nextSyncAt = null; m.finalAt = now;
+          const gate = finalGate(m, action, now);
+          if (gate.error) throw new GlobalError(gate.error);
+          if (gate.pending) {
+            m.pendingSince = now;
+            logChange(m, user.name, "pending", "Commissioner ended the meet: pending finalization", now);
+            audit("meet.pending", `${m.name}: pending finalization (24-hour hold)`);
+            break;
+          }
+          if (gate.forced) { logChange(m, user.name, "final-forced", `Finalized with incomplete results — ${str("reason")}`, now); audit("meet.final.forced", `${m.name}: incomplete results; reason: ${str("reason")}`); }
+          m.status = "FINAL"; m.polling = false; m.nextSyncAt = null; m.finalAt = now; m.correcting = null;
           const r = await this.pollMeet(c, m, true);
           sync.push(m.id);
           audit("meet.final", `Marked final: ${m.name}${r.error ? ` (last source check failed: ${r.error})` : ""}`);
@@ -1500,8 +1558,22 @@ export class Directory extends DurableObject<DirEnv> {
         }
         case "reopenMeet": {
           const m = meet();
-          m.status = "UPCOMING"; m.finalAt = null;
-          audit("meet.reopen", `Reopened ${m.name}`);
+          const wasFinal = m.status === "FINAL";
+          if (wasFinal && isScheduled(m) && !str("reason")) throw new GlobalError("Give a reason for correcting a final meet.");
+          m.status = isScheduled(m) && wasFinal ? "LIVE" : "UPCOMING"; m.finalAt = null;
+          if (isScheduled(m)) { m.correcting = wasFinal ? now : null; if (!wasFinal) m.pendingSince = null; }
+          if (wasFinal) logChange(m, user.name, "correction", `Reopened for a correction${str("reason") ? ` — ${str("reason")}` : ""}`, now);
+          audit(wasFinal ? "meet.correction" : "meet.reopen", `Reopened ${m.name}${wasFinal ? ` for a correction${str("reason") ? `: ${str("reason")}` : ""}` : ""}`);
+          break;
+        }
+        case "meetLifecycle": {
+          const m = meet();
+          const op = str("op");
+          const r = applyLifecycle(m, op, action, user.name, now);
+          if (r.error) throw new GlobalError(r.error);
+          if (r.resumePolling && m.provider === "ATHLETICLIVE" && (m.resultsUrl || m.sourceMeetId)) { m.polling = true; m.failures = 0; m.nextSyncAt = now; }
+          audit(`meet.${op}`, `${m.name}: ${r.detail}`);
+          extra = { lifecycle: { op, clearLocks: r.clearLocks, closeWeek: r.closeWeek, detail: r.detail } };
           break;
         }
         case "setMeetTest": {
@@ -1548,6 +1620,9 @@ export class Directory extends DurableObject<DirEnv> {
   }
 
   private async globalRoutes(request: Request, url: URL): Promise<Response | null> {
+    if (request.method === "GET" && url.pathname === "/platform-holder") {
+      return Response.json({ userId: await this.mainCommissioner(await this.config()) });
+    }
     if (request.method === "GET" && url.pathname === "/global-config") {
       const c = await this.config();
       return Response.json({ config: this.publicConfig(c) });

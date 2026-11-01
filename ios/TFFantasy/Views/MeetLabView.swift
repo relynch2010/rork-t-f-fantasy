@@ -123,7 +123,7 @@ struct MeetLabView: View {
     var body: some View {
         List {
             if store.league?.canEditGlobalSettings != true {
-                Section { MainLeagueBanner(text: "The Meet Test Lab is for the Main League commissioner.") }
+                Section { MainLeagueBanner(text: "The Meet Test Lab is for the platform commissioner.") }
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
             } else {

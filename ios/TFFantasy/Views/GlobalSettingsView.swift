@@ -41,7 +41,7 @@ struct GlobalSettingsView: View {
             if let league = store.league {
                 if !league.canEditGlobalSettings {
                     Section {
-                        MainLeagueBanner(text: "Only the Main League commissioner can change these. You're seeing the current global setup.")
+                        MainLeagueBanner(text: "Only the platform commissioner can change these. You're seeing the current global setup.")
                     }
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
@@ -60,6 +60,7 @@ struct GlobalSettingsView: View {
                 }
                 .listRowBackground(Theme.surface)
                 if let leagues { leaguesSection(leagues) }
+                if league.isMain && league.canEditGlobalSettings { PlatformTransferSection() }
             }
         }
         .screenBackground()

@@ -25,6 +25,7 @@ import { removeStale, sendPush, statsVerdict, userProblem, viewUser, waitForStat
 import { auditLines, maxBreakdown, scenarioLines, scenarioMetrics, type Game as AuditGame } from "./audit";
 import { backtest, checkSchedule, labResults, profileFields, regenerate, relayLab, seedLab, type Contest, type Game } from "./labs";
 import { pastedToCsv } from "./pasted";
+import { applyLifecycle, applySchedule, finalEligibleAt, finalGate, holdsWeekOpen, isScheduled, logChange, meetStage, nextScheduleAt, rosterLocked, scheduleTick } from "./schedule";
 
 /** One meet in the projection library (projections only; never scored). */
 type ProjMeet = {
@@ -56,7 +57,8 @@ type Env = {
   EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
 };
 
-type AthStatus = "active" | "Q" | "O" | "IR";
+/** D (Doubtful) is informational only, like Q: it never changes eligibility or scoring. */
+type AthStatus = "active" | "Q" | "D" | "O" | "IR";
 
 /**
  * League-scoped athlete record. Identity (name/school/gender/positions) plus league presentation: `photoAt` is the
@@ -98,7 +100,7 @@ type MasterAthlete = {
 /** Player changes that belong to the master player database (Main League commissioner only, applied to every league). */
 const MASTER_ACTIONS = new Set(["addAthlete", "editAthlete", "setStatus", "removeAthlete"]);
 
-const STATUS_LABEL: Record<AthStatus, string> = { active: "Active", Q: "Questionable", O: "Out", IR: "IR" };
+const STATUS_LABEL: Record<AthStatus, string> = { active: "Active", Q: "Questionable", D: "Doubtful", O: "Out", IR: "IR" };
 
 type Unmatched = {
   id: string;
@@ -166,7 +168,7 @@ type Team = {
 };
 
 /** A player locked into the spot they held when their first event of the week started. */
-type Lock = { at: number; event: string; meetId: string; teamId: string | null; slot: SlotId | null; reason: "start" | "result" };
+type Lock = { at: number; event: string; meetId: string; teamId: string | null; slot: SlotId | null; reason: "start" | "result" | "meet" };
 
 /** `slot` = draft position (1-based) this person picked; null = random. */
 type MockSeat = { id: string; userId: string | null; name: string; bot: boolean; slot?: number | null };
@@ -242,6 +244,11 @@ type Claim = {
 };
 
 /** One completed league move. `otherId` is the second team in a trade. Pending claims/offers are never written here. */
+/** A finished season kept for browsing (Stage 3). The full copy lives in storage under `archive:<id>`. */
+type ArchiveMeta = { id: string; label: string; seasonType: SeasonType | null; season: number; champion: string | null; teams: number; finishedAt: number; endedEarly: boolean };
+type SeasonType = "indoor" | "outdoor";
+const SEASON_LABEL: Record<SeasonType, string> = { indoor: "Indoor", outdoor: "Outdoor" };
+
 type Tx = { id: string; kind: string; teamId: string | null; text: string; at: number; athleteIds: string[]; otherId?: string | null; status?: "completed" | "vetoed" };
 
 type NoteCategory = "player" | "trades" | "waivers" | "draft" | "live" | "league";
@@ -341,6 +348,10 @@ type State = {
   poolExcludedNames?: Record<string, string>;
   /** The league's school. Blank/undefined = Cornwall Central (every league created before schools existed). */
   school?: string;
+  /** Stage 3: indoor or outdoor (undefined = not set; older leagues). */
+  seasonType?: SeasonType;
+  /** Stage 3: finished seasons, newest last. */
+  archives?: ArchiveMeta[];
   /** record key → [league version it last changed at, client that changed it]. Stale-write protection. */
   touched?: Record<string, [number, string]>;
   /** Recently applied client request ids, so a retried request never runs twice. */
@@ -409,14 +420,14 @@ class IntegrityError extends Error {}
 const GLOBAL_ACTIONS = new Set([
   "setStandard", "toggleStandard", "setPerformanceTable", "updateScoring", "updateGlobalSettings", "updateRoster", "updateLive", "updateNotices",
   "createMeet", "updateMeet", "deleteMeet", "resolveMeet", "startLive", "stopLive", "syncMeet", "markFinal", "reopenMeet",
-  "reprocessMeet", "pauseAllLive", "resumeAllLive", "restorePoint",
+  "reprocessMeet", "pauseAllLive", "resumeAllLive", "restorePoint", "meetLifecycle",
 ]);
 
 /** Admin Panel tool ops (every one re-checks access on the server). */
 const ADMIN_OPS = new Set(["scoringExport", "liveActivityPreview", "projMeets", "projMeetPreview", "projMeetAdd", "projMeetRemove", "projMeetsRebuild", "adminAccess", "draftLoad", "draftSave", "draftClear", "draftPreview", "sandboxPublish", "sandboxRestore", "adminVersions", "changelog", "projHealth", "validateData", "audit", "backtestArmory", "fingerprint", "enableSandbox"]);
 
 /** Meet actions a non-Cornwall league runs locally (its own schedule). */
-const LOCAL_MEET_ACTIONS = new Set(["createMeet", "updateMeet", "deleteMeet", "resolveMeet", "startLive", "stopLive", "syncMeet", "markFinal", "reopenMeet"]);
+const LOCAL_MEET_ACTIONS = new Set(["createMeet", "updateMeet", "deleteMeet", "resolveMeet", "startLive", "stopLive", "syncMeet", "markFinal", "reopenMeet", "meetLifecycle"]);
 
 const DIR_HEADERS = { "Content-Type": "application/json", "X-Rork-DO-Class": "Directory", "X-Rork-DO-Id": "global" };
 /** Last season's (2025-26) Armory meets on AthleticLIVE: the projection library's real source data. */
@@ -965,6 +976,32 @@ export class League extends DurableObject<Env> {
         return Response.json(await this.integrity(String(body.tag ?? ""), body.backup === true));
       }
 
+      // Account deletion (Stage 3): is this user the commissioner here, and who could take over?
+      if (request.method === "GET" && url.pathname === "/commish-check") {
+        const s = this.require();
+        const userId = url.searchParams.get("userId") ?? "";
+        const others = s.teams.filter((t) => t.id !== userId).map((t) => ({ teamId: t.id, teamName: t.teamName, ownerName: t.ownerName }));
+        return Response.json({ leagueId: s.id, name: s.name, isCommissioner: s.commissionerId === userId, others });
+      }
+      if (request.method === "POST" && url.pathname === "/handoff") {
+        const s = this.require();
+        const b = (await request.json()) as { user?: User; teamId?: string };
+        const from = b.user;
+        if (!from || s.commissionerId !== from.id) return Response.json({ ok: true, skipped: true });
+        const to = s.teams.find((t) => t.id === b.teamId && t.id !== from.id);
+        if (!to) return Response.json({ error: `Pick a current member of ${s.name} to take over.` }, { status: 400 });
+        this.handOffCommissioner(from, to, "deleted their account");
+        await this.save();
+        return Response.json({ ok: true });
+      }
+      if (request.method === "GET" && url.pathname === "/archive") {
+        const userId = url.searchParams.get("userId") ?? "";
+        if (!this.isMember(userId)) return Response.json({ error: "Not a member of this league." }, { status: 403 });
+        const id = url.searchParams.get("id") ?? "";
+        if (!(this.require().archives ?? []).some((a) => a.id === id)) return Response.json({ error: "That season isn't in this league's archive." }, { status: 404 });
+        return Response.json(await this.ctx.storage.get(`archive:${id}`) ?? { error: "Archive missing." });
+      }
+
       if (request.method === "GET" && url.pathname === "/global-whois") {
         const s = this.require();
         return Response.json({ commissionerId: s.commissionerId, leagueId: s.id, code: s.code });
@@ -1311,7 +1348,13 @@ export class League extends DurableObject<Env> {
       changed = true;
     }
     if (s.phase === "predraft" && s.settings.draftAt !== null && s.settings.draftAt <= now + 1000 && s.teams.length >= 2) {
-      this.startDraft();
+      if (s.teams.length % 2 === 0) {
+        this.startDraft();
+      } else {
+        // Odd team count: the scheduled draft waits. The commissioner is told once per scheduled time.
+        this.notify("Draft is waiting", `The draft needs an even number of teams. ${s.name} has ${s.teams.length}. Invite one more team or remove one, then start the draft.`, "draft", [s.commissionerId], true, { key: `draft:odd:${s.settings.draftAt}`, link: { type: "draft" } });
+        s.settings.draftAt = null;
+      }
       changed = true;
     }
     if (s.phase === "drafting" && s.draft.status === "live" && s.draft.deadline !== null && s.draft.deadline <= now + 750) {
@@ -1339,6 +1382,7 @@ export class League extends DurableObject<Env> {
       this.advanceWeek();
       changed = true;
     }
+    if (await this.tickSchedule(now)) changed = true;
     if (this.refreshLocks(now)) changed = true;
     const locked = this.lockedIds();
     for (const t of s.trades) {
@@ -1433,6 +1477,14 @@ export class League extends DurableObject<Env> {
     for (const m of s.meets) if (m.scope !== "global" && !m.archived && m.polling && m.nextSyncAt !== null) times.push(m.nextSyncAt);
     const nextLock = this.nextLockAt();
     if (nextLock !== null) times.push(nextLock);
+    const tnow = Date.now();
+    for (const m of s.meets) {
+      if (m.archived) continue;
+      // Shared meets: only their start matters here (it activates the matchup). Own meets: start, end and hold.
+      if (m.scope === "global") { if (s.phase === "season" && isScheduled(m) && (m.startAt as number) > tnow && m.week === s.week + 1) times.push(m.startAt as number); continue; }
+      const at = nextScheduleAt(m, tnow);
+      if (at !== null) times.push(at);
+    }
     for (const mk of this.mocks.values()) if (mk.status === "live" && mk.deadline !== null) times.push(mk.deadline);
     if (times.length === 0) {
       await this.env.DO.deleteAlarm("League", s.id).catch(() => undefined);
@@ -1672,6 +1724,7 @@ export class League extends DurableObject<Env> {
       if ((sig && sig !== m.seenFeed && m.status !== "UPCOMING") || finalPending || (reprocess && m.status !== "UPCOMING")) toSync.push({ m, final: finalPending });
     }
     if (this.resyncWaiverSchedule()) changed = true;
+    if (this.closeCanceledWeek()) changed = true;
     if (rescore) {
       if (prev && prev.scoringVersion !== cfg.scoringVersion && this.results.size > 0) await this.snapshot(`Before scoring v${cfg.scoringVersion} (Main League change)`);
       this.recompute();
@@ -1703,7 +1756,7 @@ export class League extends DurableObject<Env> {
       method: "POST", headers: DIR_HEADERS, body: JSON.stringify({ user, action, via: s.id }),
     }));
     const out = (await r.json().catch(() => ({}))) as Record<string, unknown>;
-    if (r.status === 403) throw new ForbiddenError(String(out.error ?? "Only the Main League commissioner can change global settings."));
+    if (r.status === 403) throw new ForbiddenError(String(out.error ?? "Only the platform commissioner can change global settings."));
     if (!r.ok) throw new ActionError(String(out.error ?? "Something went wrong. Nothing was changed."));
     if (out.config) await this.applyGlobal(out.config as GlobalConfig, (out.sync as string[] | undefined) ?? []);
     return out;
@@ -1715,7 +1768,8 @@ export class League extends DurableObject<Env> {
     return {
       isMainLeague: this.isMain(),
       mainLeagueCode: MAIN_LEAGUE_CODE,
-      canEditGlobal: this.isMain() && userId === s.commissionerId,
+      // The platform commissioner (pinned by the Directory, Stage 3) controls global settings from the Main League.
+      canEditGlobal: this.isMain() && userId === (this.global?.platformPinned ? this.global.mainCommissionerId : s.commissionerId),
       shapePending: this.shapePending(),
       global: g ? {
         version: g.version, scoringVersion: g.scoringVersion, updatedAt: g.updatedAt, updatedBy: g.updatedBy,
@@ -1790,6 +1844,11 @@ export class League extends DurableObject<Env> {
       school: this.scope().name,
       schoolIsDefault: this.isHome(),
       runsOwnMeets: !this.isHome(),
+      seasonType: s.seasonType ?? null,
+      seasonLabel: this.seasonLabel(),
+      archives: [...(s.archives ?? [])].reverse(),
+      canStartNewSeason: commish && !this.isHome(),
+      evenTeamsNeeded: s.phase === "predraft" && s.teams.length % 2 !== 0,
       excludedAthletes: commish && !this.isHome() ? (s.poolExcluded ?? []).slice(-200).map((id) => ({ id, name: s.poolExcludedNames?.[id] ?? id })) : [],
       waiverPriorityOrder: [...s.teams].sort((a, b) => a.waiverPriority - b.waiverPriority).map((t) => t.id),
       // Offers stay private to the two teams; a trade under review is shown to whoever votes on it (league review) or the commissioner.
@@ -1806,7 +1865,7 @@ export class League extends DurableObject<Env> {
       totalWeeks: this.totalWeeks(),
       me: tid,
       serverNow: Date.now(),
-      meets: s.meets.map(({ entries: _e, entryEvents: _ee, eventsStarted: _es, ...m }) => m),
+      meets: s.meets.map(({ entries: _e, entryEvents: _ee, eventsStarted: _es, ...m }) => ({ ...m, stage: meetStage(m, Date.now()), finalEligibleAt: finalEligibleAt(m) })),
       adp: this.adpOrder(),
       adpReview: commish ? s.adp : [],
       unmatched: commish ? s.unmatched.filter((u) => u.status === "open").slice(0, 200) : [],
@@ -2478,11 +2537,22 @@ export class League extends DurableObject<Env> {
   }
 
   /** When each athlete's first event this week starts (published start time, or the first posted result as fallback). */
-  private lockCandidates(now: number): Map<string, { at: number; event: string; meetId: string; reason: "start" | "result" } | { pendingAt: number }> {
+  private lockCandidates(now: number): Map<string, { at: number; event: string; meetId: string; reason: "start" | "result" | "meet" } | { pendingAt: number }> {
     const s = this.require();
-    const out = new Map<string, { at: number; event: string; meetId: string; reason: "start" | "result" } | { pendingAt: number }>();
+    const out = new Map<string, { at: number; event: string; meetId: string; reason: "start" | "result" | "meet" } | { pendingAt: number }>();
+    const rehearsal = !this.isMain() && s.meets.some((m) => m.testMeet && !m.history);
     for (const m of s.meets) {
       if (m.isDemo || m.archived || m.week !== s.week) continue;
+      // Stage 2: a scheduled meet locks every roster at its official start (not while postponed or canceled).
+      if (isScheduled(m) && !m.history && !(rehearsal && m.scope === "global") && m.lifecycle !== "POSTPONED" && m.lifecycle !== "CANCELED") {
+        const start = m.startAt as number;
+        for (const a of s.athletes) {
+          const cur = out.get(a.id);
+          if (start <= now) {
+            if (!cur || "pendingAt" in cur || start < cur.at) out.set(a.id, { at: start, event: m.name, meetId: m.id, reason: "meet" });
+          } else if (!cur || ("pendingAt" in cur && start < cur.pendingAt)) out.set(a.id, { pendingAt: start });
+        }
+      }
       const sched = new Map((m.schedule ?? []).map((e) => [e.id, e]));
       for (const [aid, evIds] of Object.entries(m.entries ?? {})) {
         for (const id of evIds) {
@@ -2516,6 +2586,12 @@ export class League extends DurableObject<Env> {
     if (s.phase !== "season" || s.lineupSnapshots[String(s.week)]) return false;
     const locks = this.weekLocks(s.week);
     let added = false;
+    // Meet-start locks lift when that meet is postponed, canceled or moved later (the matchup itself stays).
+    for (const [aid, l] of Object.entries(locks)) {
+      if (l.reason !== "meet") continue;
+      const m = s.meets.find((x) => x.id === l.meetId);
+      if (!m || !rosterLocked(m, now)) { delete locks[aid]; added = true; }
+    }
     for (const [aid, c] of this.lockCandidates(now)) {
       if (locks[aid] || "pendingAt" in c || !this.maybeAthlete(aid)) continue;
       const owner = this.ownerOf(aid) ?? null;
@@ -2566,7 +2642,54 @@ export class League extends DurableObject<Env> {
     const s = this.require();
     // Throwaway test leagues run on rehearsal meets: the real global meets don't hold their weeks open.
     const rehearsal = !this.isMain() && s.meets.some((m) => m.testMeet && !m.history);
-    return s.meets.filter((m) => !m.isDemo && !m.archived && !m.history && m.week === week && m.status !== "FINAL" && !(rehearsal && m.scope === "global"));
+    return s.meets.filter((m) => !m.isDemo && !m.archived && !m.history && m.week === week && holdsWeekOpen(m) && !(rehearsal && m.scope === "global"));
+  }
+
+  /** A canceled meet doesn't hold its matchup open: once nothing else is open that week, the matchup closes as it stands. */
+  private closeCanceledWeek(): boolean {
+    const s = this.require();
+    if (s.phase !== "season" || s.advanceAt != null) return false;
+    const canceled = s.meets.some((m) => m.week === s.week && m.lifecycle === "CANCELED" && !m.archived && !m.history && !m.isDemo);
+    if (!canceled || this.openMeets(s.week).length > 0) return false;
+    this.finishWeek();
+    return true;
+  }
+
+  /**
+   * Stage 2 schedule clock for scheduled meets: activates a meet's matchup when it starts before Monday, moves this
+   * league's own meets into Pending finalization after their end, and finalizes them once the 24-hour hold has passed
+   * with complete results. The Main League's shared meets are moved by the Directory; leagues just follow.
+   */
+  private async tickSchedule(now: number): Promise<boolean> {
+    const s = this.require();
+    let changed = false;
+    const rehearsal = !this.isMain() && s.meets.some((m) => m.testMeet && !m.history);
+    if (s.phase === "season" && s.advanceAt != null && s.meets.some((m) => m.week === s.week + 1 && rosterLocked(m, now) && !(rehearsal && m.scope === "global"))) {
+      this.advanceWeek();
+      changed = true;
+    }
+    for (const m of s.meets) {
+      if (m.scope === "global") continue;
+      const step = scheduleTick(m, now);
+      if (step === "pending") {
+        m.pendingSince = Math.min(now, m.endAt ?? now);
+        logChange(m, "Schedule", "pending", "Meet ended: pending finalization (held at least 24 hours)", now);
+        this.audit({ id: "schedule", name: "Schedule" }, "meet.pending", `${m.name}: pending finalization`);
+        if (m.polling) m.nextSyncAt = now;
+        changed = true;
+      } else if (step === "final") {
+        logChange(m, "Schedule", "final", "24-hour hold passed with complete results: final", now);
+        await this.finalizeMeet(m, null);
+        this.audit({ id: "schedule", name: "Schedule" }, "meet.final", `${m.name}: final after the 24-hour hold`);
+        changed = true;
+      } else if (step === "incomplete" && m.holdNotified !== m.pendingSince) {
+        m.holdNotified = m.pendingSince ?? null;
+        this.notify("Results look incomplete", `${m.name} has been pending for 24 hours but some events aren't complete. Check results, then finalize from the Meet Center.`, "commish", [s.commissionerId], true, { key: `hold:${m.id}:${m.pendingSince}` });
+        changed = true;
+      }
+    }
+    if (this.closeCanceledWeek()) changed = true;
+    return changed;
   }
 
   /**
@@ -2650,6 +2773,7 @@ export class League extends DurableObject<Env> {
   private startDraft(): void {
     const s = this.require();
     if (s.teams.length < 2) throw new ActionError("You need at least 2 teams to draft.");
+    if (s.teams.length % 2 !== 0) throw new ActionError(`The draft needs an even number of teams so every team has an opponent at every meet. You have ${s.teams.length}. Invite one more team or remove one.`);
     if (s.teams.length * ROUNDS > s.athletes.length) throw new ActionError("Not enough athletes for every team.");
     const ids = new Set(s.teams.map((t) => t.id));
     if (s.settings.draftOrderMode === "random" || s.draft.order.length !== ids.size || !s.draft.order.every((id) => ids.has(id))) {
@@ -3723,14 +3847,22 @@ export class League extends DurableObject<Env> {
       if (scoredChanges > 0) this.tx("score", null, `Live scoring: ${scoredChanges} result${scoredChanges === 1 ? "" : "s"} updated from ${m.name}`);
     }
 
+    if (!isGlobal) {
+      // Completeness for the Stage 2 hold: every listed event has results and none is still live.
+      m.complete = out.listedEvents.length > 0
+        ? out.listedEvents.every((id) => { const rowsFor = out.rows.filter((r) => r.sourceEventId === id); return rowsFor.length > 0 && rowsFor.every((r) => r.completeness !== "LIVE"); })
+        : out.rows.length > 0 && out.rows.every((r) => r.completeness !== "LIVE");
+    }
     // Automatic FINAL only when the source clearly shows every listed event complete and nothing has changed for 30 minutes.
+    // Scheduled meets enter Pending finalization instead (FINAL comes after the 24-hour hold).
     if (!isGlobal && m.status === "LIVE" && m.polling && !m.isDemo && out.listedEvents.length > 0) {
-      const done = out.listedEvents.every((id) => {
-        const rowsFor = out.rows.filter((r) => r.sourceEventId === id);
-        return rowsFor.length > 0 && rowsFor.every((r) => r.completeness !== "LIVE");
-      });
+      const done = m.complete === true;
       if (done && m.stats.lastChangeAt !== null && now - m.stats.lastChangeAt > AUTO_FINAL_QUIET_MS) {
-        await this.finalizeMeet(m, null);
+        if (!isScheduled(m)) await this.finalizeMeet(m, null);
+        else if (m.pendingSince == null && !m.lifecycle) {
+          m.pendingSince = now;
+          logChange(m, "Live source", "pending", "Every event complete: pending finalization", now);
+        }
       }
     }
     if (!isGlobal && m.polling) m.nextSyncAt = now + (m.isDemo ? 8000 : POLL_MS);
@@ -3771,6 +3903,7 @@ export class League extends DurableObject<Env> {
   private async finalizeMeet(m: Meet, user: User | null): Promise<void> {
     const s = this.require();
     m.status = "FINAL";
+    m.correcting = null;
     m.polling = false;
     m.nextSyncAt = null;
     if (m.scope !== "global" || m.finalAt === null) m.finalAt = Date.now();
@@ -4266,6 +4399,13 @@ export class League extends DurableObject<Env> {
       m[k] = v;
     }
     if (!m.name) throw new ActionError("Enter the meet name.");
+    const err = applySchedule(m, action, Date.now());
+    if (err) throw new ActionError(err);
+    // Stage 2: a league that runs its own meets gets one matchup per meet, so two meets can't share a week.
+    if (!this.isHome() && !m.history && !m.testMeet) {
+      const clash = s.meets.find((x) => x.id !== m.id && x.week === m.week && !x.archived && !x.history && !x.testMeet && x.lifecycle !== "CANCELED");
+      if (clash) throw new ActionError(`Week ${m.week} already has ${clash.name}. Each meet is its own matchup — pick another week.`);
+    }
   }
 
   // MARK: - Settings
@@ -4315,6 +4455,97 @@ export class League extends DurableObject<Env> {
     if (has("lineupLock")) st.lineupLock = a.lineupLock === "manual" ? "manual" : "results";
   }
 
+  private seasonLabel(): string {
+    const s = this.require();
+    return s.seasonType ? `${s.season} ${SEASON_LABEL[s.seasonType]}` : `${s.season}`;
+  }
+
+  /** Moves commissioner tools to another existing member (leave, account deletion). Audited and announced. */
+  private handOffCommissioner(from: User, to: Team, why: string): void {
+    const s = this.require();
+    s.commissionerId = to.id;
+    this.audit(from, "commissioner.handoff", `${from.name} ${why}; ${to.ownerName} (${to.teamName}) is now the commissioner`);
+    this.tx("commish", to.id, `${to.ownerName} (${to.teamName}) is now the commissioner`);
+    this.notify("You're the commissioner", `${from.name} ${why} and handed you commissioner tools for ${s.name}.`, "commish", [to.id], true, { key: `commish:${to.id}:${Date.now()}` });
+    this.notify("New commissioner", `${to.ownerName} is now the commissioner.`, "commish", this.allIds().filter((id) => id !== to.id), false, { key: `commish-all:${to.id}:${Date.now()}` });
+  }
+
+  /**
+   * Stage 3: archives the finished season (standings, matchups, rosters, transactions, champion) and starts a new
+   * indoor/outdoor season at pre-draft. A full backup is written first. Old results stay as PB/SB history only, so
+   * they never score in the new season; old meets are kept (archived) with their points in the archive copy.
+   */
+  private async startNewSeason(user: User, seasonType: SeasonType, endEarly: boolean): Promise<void> {
+    const s = this.require();
+    if (s.phase === "drafting") throw new ActionError("Finish the draft first.");
+    if (s.phase === "season" && !endEarly) throw new ActionError("This season is still running. End it early to start a new one.");
+    const open = s.meets.filter((m) => !m.archived && !m.history && !m.isDemo && (m.status === "LIVE" || m.pendingSince != null && m.status !== "FINAL" || m.lifecycle === "INTERRUPTED"));
+    if (open.length > 0) throw new ActionError(`${open[0]?.name ?? "A meet"} is still live or pending. Finalize it first.`);
+    const at = Date.now();
+    await this.ctx.storage.put(`backup:newseason:${at}`, JSON.parse(JSON.stringify(s)) as State);
+    const played = s.phase !== "predraft" || s.draft.picks.length > 0;
+    if (played) {
+      const recs = this.records();
+      const order = this.standingsOrder(recs);
+      const name = (id: string | null): string | null => (id ? s.teams.find((t) => t.id === id)?.teamName ?? null : null);
+      const championId = s.bracket?.championId ?? (s.phase === "complete" || endEarly ? order[0] ?? null : null);
+      const id = `${at.toString(36)}${uid().slice(0, 4)}`;
+      const label = this.seasonLabel();
+      const athleteName = (aid: string): string => s.athletes.find((a) => a.id === aid)?.name ?? "Former athlete";
+      const full = {
+        id, label, seasonType: s.seasonType ?? null, season: s.season, finishedAt: at, endedEarly: s.phase === "season",
+        champion: name(championId), championId,
+        standings: order.map((tid, i) => ({ rank: i + 1, teamId: tid, teamName: name(tid) ?? "", ownerName: s.teams.find((t) => t.id === tid)?.ownerName ?? "", ...(recs[tid] ?? {}) })),
+        matchups: s.schedule.map((m) => ({
+          week: m.week, kind: m.kind, round: m.round, label: m.round ?? s.meets.find((x) => x.week === m.week && !x.archived && !x.history && !x.isDemo)?.name ?? `Week ${m.week}`,
+          home: name(m.homeId), away: name(m.awayId), homeScore: round2(this.matchScore(m, m.homeId)), awayScore: m.awayId ? round2(this.matchScore(m, m.awayId)) : null, final: m.final,
+        })),
+        rosters: s.teams.map((t) => ({ teamId: t.id, teamName: t.teamName, ownerName: t.ownerName, athletes: this.rosterOf(t).map(athleteName) })),
+        transactions: s.transactions.slice(-300).map((x) => ({ at: x.at, kind: x.kind, text: x.text })),
+        meets: s.meets.filter((m) => !m.archived && !m.history && !m.isDemo && !m.testMeet).map((m) => ({ name: m.name, week: m.week, date: m.date, status: m.lifecycle ?? m.status, location: m.location ?? null })),
+      };
+      await this.ctx.storage.put(`archive:${id}`, full);
+      s.archives = [...(s.archives ?? []), { id, label, seasonType: s.seasonType ?? null, season: s.season, champion: full.champion, teams: s.teams.length, finishedAt: at, endedEarly: full.endedEarly }];
+      // Old results: PB/SB history only (never scored again).
+      for (const r of this.results.values()) {
+        if (r.historyOnly) continue;
+        r.historyOnly = true;
+        r.week = 0;
+        await this.ctx.storage.put(`res:${r.id}`, r);
+      }
+      for (const m of s.meets) if (m.scope !== "global" && !m.history) { m.archived = true; m.polling = false; m.nextSyncAt = null; }
+      s.transactions = [];
+    }
+    for (const [i, t] of s.teams.entries()) {
+      t.lineup = emptyLineup();
+      t.queue = [];
+      t.waiverPriority = i + 1;
+      t.faab = this.st().faabBudget;
+      t.addsThisWeek = 0;
+    }
+    const order = s.draftOrderAtStart && s.draftOrderAtStart.length === s.teams.length ? [...s.draftOrderAtStart] : [...s.draft.order];
+    s.draft = { order, picks: [], status: "pending", deadline: null, pausedRemaining: null, startedAt: null };
+    s.phase = "predraft";
+    s.week = 1;
+    s.schedule = [];
+    s.bracket = null;
+    s.lineupSnapshots = {};
+    s.locks = {};
+    s.waivers = {};
+    s.advanceAt = null;
+    delete s.shape;
+    delete s.draftOrderAtStart;
+    s.settings.draftAt = null;
+    for (const c of s.claims) if (c.status === "pending") { c.status = "cancelled"; c.reason = "New season"; c.resolvedAt = at; }
+    for (const t of s.trades) if (t.status === "pending" || t.status === "review") { t.status = "cancelled"; t.resolvedAt = at; }
+    s.season = new Date(at).getFullYear();
+    s.seasonType = seasonType;
+    this.recompute();
+    this.audit(user, "season.new", `New season ${this.seasonLabel()} started by ${user.name}. ${played ? `Previous season archived. ` : ""}Backup: backup:newseason:${at}`);
+    this.tx("commish", null, `The ${this.seasonLabel()} season has started. Rosters are cleared for a new draft.`);
+    this.notify("New season", `${s.name}: the ${this.seasonLabel()} season has started. Past seasons are in the archive.`, "draft", null, true, { key: `season:new:${at}`, link: { type: "draft" } });
+  }
+
   private assertCommish(user: User): void {
     if (this.require().commissionerId !== user.id) throw new ActionError("Only the commissioner can do that.");
   }
@@ -4338,6 +4569,8 @@ export class League extends DurableObject<Env> {
     } else if (GLOBAL_ACTIONS.has(type) && LOCAL_MEET_ACTIONS.has(type) && !this.isHome()) {
       // Another school's league: its commissioner schedules and runs its own meets (same importer and engine).
       this.assertCommish(user);
+      const past = str("meetId") ? s.meets.find((m) => m.id === str("meetId") && m.archived) : undefined;
+      if (past && type !== "deleteMeet") throw new ActionError(`${past.name} belongs to a past season. Its points are kept in the season archive.`);
     } else if (GLOBAL_ACTIONS.has(type)) {
       const meetId = str("meetId");
       const local = meetId ? s.meets.find((m) => m.id === meetId && m.scope !== "global") : undefined;
@@ -4609,7 +4842,7 @@ export class League extends DurableObject<Env> {
         this.assertCommish(user);
         const a = this.athlete(str("athleteId"));
         const raw = str("status");
-        const next: AthStatus = raw === "Q" || raw === "O" || raw === "IR" ? raw : "active";
+        const next: AthStatus = raw === "Q" || raw === "D" || raw === "O" || raw === "IR" ? raw : "active";
         const prev: AthStatus = a.status ?? "active";
         if (prev === next) return;
         a.status = next;
@@ -4620,7 +4853,7 @@ export class League extends DurableObject<Env> {
           const inIr = owner.lineup.IR === a.id;
           const body = next === "active"
             ? `${a.name} has been cleared and is Active.${inIr ? " Move them out of the IR spot before adding players." : ""}`
-            : next === "Q" ? `${a.name} has been listed as Questionable.${inIr ? " Move them out of the IR spot before adding players." : ""}`
+            : next === "Q" || next === "D" ? `${a.name} has been listed as ${STATUS_LABEL[next]}.${inIr ? " Move them out of the IR spot before adding players." : ""}`
             : next === "O" ? `${a.name} has been listed as Out. You can move them to your IR spot.`
             : `${a.name} has been placed on IR. You can move them to your IR spot to free a roster spot.`;
           this.notify(`${a.name}: ${STATUS_LABEL[next]}`, body, "player", [owner.id], true, { key: `status:${a.id}:${Date.now()}`, link: { type: "player", id: a.id } });
@@ -5138,6 +5371,59 @@ export class League extends DurableObject<Env> {
         return;
       }
 
+      case "setSeasonType": {
+        this.assertCommish(user);
+        if (s.phase !== "predraft") throw new ActionError("Set indoor or outdoor before the draft. Start a new season to switch.");
+        const t = str("seasonType") as SeasonType;
+        if (!SEASON_LABEL[t]) throw new ActionError("Pick Indoor or Outdoor.");
+        s.seasonType = t;
+        this.audit(user, "season.type", `Season set to ${SEASON_LABEL[t]}`);
+        this.tx("commish", null, `This is the ${this.seasonLabel()} season`);
+        return;
+      }
+
+      case "startNewSeason": {
+        this.assertCommish(user);
+        if (this.isHome()) throw new ActionError("Cornwall Central leagues follow the Main League's shared meet calendar. Their next season starts with the platform.");
+        if (str("confirm") !== "NEW SEASON") throw new ActionError("Type NEW SEASON to confirm.");
+        const t = str("seasonType") as SeasonType;
+        if (!SEASON_LABEL[t]) throw new ActionError("Pick Indoor or Outdoor for the new season.");
+        await this.startNewSeason(user, t, action.endEarly === true);
+        return;
+      }
+
+      case "leaveLeague": {
+        const mine = s.teams.find((x) => x.id === user.id);
+        if (!mine) {
+          if (s.teams.some((x) => x.coManagerId === user.id)) throw new ActionError("You're a co-manager here. Use Leave as co-manager instead.");
+          throw new ActionError("You're not in this league.");
+        }
+        const others = s.teams.filter((x) => x.id !== user.id);
+        if (s.phase !== "predraft") {
+          // Rosters, matchups and standings depend on every team, so a drafted team stays until the season ends.
+          throw new ActionError(s.commissionerId === user.id
+            ? "Your team stays in the league until the season ends because its matchups are already scheduled. You can hand off commissioner in Commissioner Tools, or hide the league from Home."
+            : "Your team stays in the league until the season ends because its matchups are already scheduled. You can hide the league from Home instead.");
+        }
+        if (s.commissionerId === user.id) {
+          const nextId = str("newCommissionerTeamId");
+          if (others.length > 0 && !nextId) throw new ActionError("Pick a member to take over as commissioner before you leave.");
+          if (nextId) {
+            const next = others.find((x) => x.id === nextId);
+            if (!next) throw new ActionError("Pick a current member of this league.");
+            this.handOffCommissioner(user, next, "left the league");
+          }
+        }
+        s.teams = s.teams.filter((x) => x.id !== user.id);
+        s.draft.order = s.draft.order.filter((x) => x !== user.id);
+        if (mine.coManagerId) await this.dir("/unmember", { userId: mine.coManagerId, leagueId: s.id });
+        if (mine.coInvite) await this.dir("/co-drop", { code: mine.coInvite.code });
+        await this.dir("/unmember", { userId: user.id, leagueId: s.id });
+        this.audit(user, "member.leave", `${mine.teamName} (${user.name}) left the league`);
+        this.tx("commish", null, `${mine.teamName} left the league`);
+        return;
+      }
+
       case "setCommissioner": {
         this.assertCommish(user);
         const t = this.team(str("teamId"));
@@ -5218,6 +5504,8 @@ export class League extends DurableObject<Env> {
       case "startLive": {
         this.assertCommish(user);
         const m = this.meet(str("meetId"));
+        if (m.lifecycle === "POSTPONED" || m.lifecycle === "CANCELED") throw new ActionError(`${m.name} is ${m.lifecycle === "POSTPONED" ? "postponed" : "canceled"}. Reschedule it first.`);
+        if (m.lifecycle === "INTERRUPTED") throw new ActionError(`${m.name} is interrupted. Use Resume.`);
         if (m.provider === "ATHLETICLIVE" && !m.resultsUrl && !m.sourceMeetId && m.sourceUrl) await this.resolveMeet(m, user);
         if (m.provider === "ATHLETICLIVE" && !m.resultsUrl && !m.sourceMeetId) {
           throw new ActionError(m.resolve && !m.resolve.ok ? `${m.resolve.message}` : "Add the meet's AthleticLIVE link, then test the connection.");
@@ -5258,8 +5546,41 @@ export class League extends DurableObject<Env> {
       case "markFinal": {
         this.assertCommish(user);
         const m = this.meet(str("meetId"));
+        const gate = finalGate(m, action, Date.now());
+        if (gate.error) throw new ActionError(gate.error);
+        if (gate.pending) {
+          // Scheduled meets never jump straight to FINAL: they're held at least 24 hours after the meet first.
+          m.pendingSince = Date.now();
+          logChange(m, user.name, "pending", "Commissioner ended the meet: pending finalization", Date.now());
+          this.audit(user, "meet.pending", `${m.name}: pending finalization (24-hour hold)`);
+          this.mirror("meets", [this.meetRow(m)]);
+          return;
+        }
+        if (gate.forced) logChange(m, user.name, "final-forced", `Finalized with incomplete results — ${str("reason")}`, Date.now());
         await this.finalizeMeet(m, user);
-        this.audit(user, "meet.final", `Marked final: ${m.name}`);
+        this.audit(user, gate.forced ? "meet.final.forced" : "meet.final", `Marked final: ${m.name}${gate.forced ? ` (incomplete results; reason: ${str("reason")})` : ""}`);
+        return;
+      }
+
+      case "meetLifecycle": {
+        this.assertCommish(user);
+        const m = this.meet(str("meetId"));
+        const now = Date.now();
+        const op = str("op");
+        const r = applyLifecycle(m, op, action, user.name, now);
+        if (r.error) throw new ActionError(r.error);
+        if (r.clearLocks && s.locks?.[String(m.week)] && !s.lineupSnapshots[String(m.week)]) {
+          const wk = s.locks[String(m.week)] as Record<string, Lock>;
+          for (const [aid, l] of Object.entries(wk)) if (l.meetId === m.id && l.reason === "meet") delete wk[aid];
+        }
+        if (r.resumePolling && m.provider === "ATHLETICLIVE" && (m.resultsUrl || m.sourceMeetId)) { m.polling = true; m.failures = 0; m.nextSyncAt = now; }
+        this.audit(user, `meet.${op}`, `${m.name}: ${r.detail}`);
+        if (!m.history) {
+          this.tx("commish", null, `${m.name}: ${r.detail}`);
+          this.notify(`${m.name}: ${op === "postpone" ? "postponed" : op === "reschedule" ? "rescheduled" : op === "cancel" ? "canceled" : op === "interrupt" ? "interrupted" : "resumed"}`, `${r.detail}. Your matchup stays the same.`, "score", null, true, { key: `life:${m.id}:${now}`, link: { type: "matchup", week: m.week } });
+        }
+        if (r.closeWeek) this.closeCanceledWeek();
+        this.mirror("meets", [this.meetRow(m)]);
         return;
       }
 
@@ -5325,9 +5646,15 @@ export class League extends DurableObject<Env> {
       case "reopenMeet": {
         this.assertCommish(user);
         const m = this.meet(str("meetId"));
-        m.status = "UPCOMING";
+        const wasFinal = m.status === "FINAL";
+        // Stage 2: changing a final scheduled meet is a correction, which needs an explicit reason on the record.
+        if (wasFinal && isScheduled(m) && !str("reason")) throw new ActionError("Give a reason for correcting a final meet.");
+        m.status = isScheduled(m) && wasFinal ? "LIVE" : "UPCOMING";
         m.finalAt = null;
-        this.audit(user, "meet.reopen", `Reopened ${m.name}`);
+        // A correction keeps the hold already served; the meet waits for the commissioner's Mark Final (no auto-final).
+        if (isScheduled(m)) { m.correcting = wasFinal ? Date.now() : null; if (!wasFinal) m.pendingSince = null; m.holdNotified = null; }
+        if (wasFinal) logChange(m, user.name, "correction", `Reopened for a correction${str("reason") ? ` — ${str("reason")}` : ""}`, Date.now());
+        this.audit(user, wasFinal ? "meet.correction" : "meet.reopen", `Reopened ${m.name}${wasFinal ? ` for a correction${str("reason") ? `: ${str("reason")}` : ""}` : ""}`);
         this.mirror("meets", [this.meetRow(m)]);
         return;
       }
@@ -6343,6 +6670,7 @@ export class League extends DurableObject<Env> {
   private adminMode(userId: string): { mode: "global" | "sandbox" | null; reason: string } {
     const s = this.require();
     const g = this.global;
+    if (this.isMain() && g?.platformPinned && g.mainCommissionerId === userId) return { mode: "global", reason: "Platform commissioner" };
     if (s.commissionerId !== userId) return { mode: null, reason: "Only the commissioner can open the Admin Panel." };
     if (this.isMain()) return g?.mainCommissionerId === userId ? { mode: "global", reason: "Main League commissioner" } : { mode: null, reason: "Only the Main League commissioner account can open the Admin Panel." };
     if (g?.mainCommissionerId === userId) return { mode: "sandbox", reason: "Main League commissioner in another league: sandbox only" };

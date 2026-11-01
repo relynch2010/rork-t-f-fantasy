@@ -1,0 +1,197 @@
+{
+ "checks": [
+  {
+   "name": "View flags an odd team count before the draft",
+   "pass": true,
+   "detail": "(True, 3)"
+  },
+  {
+   "name": "Draft blocked with 3 teams (server)",
+   "pass": true,
+   "detail": "The draft needs an even number of teams so every team has an opponent at every meet. You have 3. Invite one more team or remove one."
+  },
+  {
+   "name": "Member can't set the season type",
+   "pass": true,
+   "detail": "400"
+  },
+  {
+   "name": "Commissioner sets Outdoor before the draft",
+   "pass": true,
+   "detail": "(None, '2026 Outdoor')"
+  },
+  {
+   "name": "Member leaves before the draft (team removed, league gone from their list)",
+   "pass": true,
+   "detail": "(None, 2)"
+  },
+  {
+   "name": "Former member can't read the league afterwards",
+   "pass": true,
+   "detail": "403"
+  },
+  {
+   "name": "Joining still works one person at a time (now 4 teams, even)",
+   "pass": true,
+   "detail": "4"
+  },
+  {
+   "name": "Draft starts with 4 teams",
+   "pass": true,
+   "detail": "None"
+  },
+  {
+   "name": "Draft completes; season running",
+   "pass": true,
+   "detail": "season"
+  },
+  {
+   "name": "Member can't leave mid-season (rosters protected)",
+   "pass": true,
+   "detail": "Your team stays in the league until the season ends because its matchups are already scheduled. You can hide the league from Home instead."
+  },
+  {
+   "name": "Member can't start a new season",
+   "pass": true,
+   "detail": "400"
+  },
+  {
+   "name": "Member can't change league settings",
+   "pass": true,
+   "detail": "400"
+  },
+  {
+   "name": "League commissioner can't transfer the platform role",
+   "pass": true,
+   "detail": "(403, 'Only the Main League commissioner can change global settings.')"
+  },
+  {
+   "name": "League commissioner can't publish universal scoring",
+   "pass": true,
+   "detail": "(403, 'Only the Main League commissioner can change global settings.')"
+  },
+  {
+   "name": "League commissioner gets no global-settings access",
+   "pass": true,
+   "detail": "False"
+  },
+  {
+   "name": "Commissioner of league A can't read league B",
+   "pass": true,
+   "detail": "403"
+  },
+  {
+   "name": "Commissioner of league A can't act on league B",
+   "pass": true,
+   "detail": "403"
+  },
+  {
+   "name": "Member of A can't read B's matchups",
+   "pass": true,
+   "detail": "403"
+  },
+  {
+   "name": "New season needs typed NEW SEASON",
+   "pass": true,
+   "detail": "Type NEW SEASON to confirm."
+  },
+  {
+   "name": "Running season can't be replaced without End Early",
+   "pass": true,
+   "detail": "This season is still running. End it early to start a new one."
+  },
+  {
+   "name": "New season starts at pre-draft as Indoor with rosters cleared",
+   "pass": true,
+   "detail": "(None, 'predraft', 'indoor')"
+  },
+  {
+   "name": "Old season listed in the archive with its champion",
+   "pass": true,
+   "detail": "[{'id': 'mvyf10a8f301', 'label': '2026 Outdoor', 'seasonType': 'outdoor', 'season': 2026, 'champion': 'A Commish', 'teams': 4, 'finishedAt': 1793572953776, 'endedEarly': True}]"
+  },
+  {
+   "name": "Member can browse the archived season (standings, matchups, rosters, transactions)",
+   "pass": true,
+   "detail": "{'standings': 4, 'rosters': 4, 'matchups': 16, 'transactions': 34}"
+  },
+  {
+   "name": "Non-member can't read another league's archive",
+   "pass": true,
+   "detail": "403"
+  },
+  {
+   "name": "Teams and members kept across seasons",
+   "pass": true,
+   "detail": "24"
+  },
+  {
+   "name": "New season can be drafted again",
+   "pass": true,
+   "detail": "None"
+  },
+  {
+   "name": "Cornwall Central league can't start its own season (follows the platform)",
+   "pass": true,
+   "detail": "Cornwall Central leagues follow the Main League's shared meet calendar. Their next season starts with the platform."
+  },
+  {
+   "name": "Commissioner can't leave without naming a successor",
+   "pass": true,
+   "detail": "Pick a member to take over as commissioner before you leave."
+  },
+  {
+   "name": "Commissioner leaves after handing off (successor is commissioner, team removed)",
+   "pass": true,
+   "detail": "(None, 'u221df789ca21437fab2f690')"
+  },
+  {
+   "name": "Hand-off recorded in the audit log",
+   "pass": true,
+   "detail": "['member.leave', 'commissioner.handoff']"
+  },
+  {
+   "name": "Deleting a commissioner's account is refused until a successor is picked (409 + list)",
+   "pass": true,
+   "detail": "(409, ['QA S3 D'])"
+  },
+  {
+   "name": "A successor who isn't a member is rejected",
+   "pass": true,
+   "detail": "409"
+  },
+  {
+   "name": "Account deleted after hand-off; league keeps an active commissioner",
+   "pass": true,
+   "detail": "(None, None, 'u99c2cc0a397f43c1a5eb0ce')"
+  },
+  {
+   "name": "Account with no commissioned leagues deletes normally",
+   "pass": true,
+   "detail": "None"
+  },
+  {
+   "name": "Athlete records carry no contact or personal fields",
+   "pass": true,
+   "detail": "['crop', 'flex', 'gender', 'id', 'masterPhoto', 'name', 'note', 'photo', 'position', 'positions', 'rank', 'rev', 'school', 'status']"
+  }
+ ],
+ "athleteFields": [
+  "crop",
+  "flex",
+  "gender",
+  "id",
+  "masterPhoto",
+  "name",
+  "note",
+  "photo",
+  "position",
+  "positions",
+  "rank",
+  "rev",
+  "school",
+  "status"
+ ],
+ "passed": 35,
+ "total": 35
+}

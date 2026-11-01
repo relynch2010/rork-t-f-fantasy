@@ -391,6 +391,8 @@ struct SettingsView: View {
     @Environment(AppStore.self) private var store
     @State private var confirmSignOut: Bool = false
     @State private var confirmDelete: Bool = false
+    @State private var handoffs: [HandoffNeed] = []
+    @State private var showHandoffs: Bool = false
 
     var body: some View {
         List {
@@ -401,6 +403,16 @@ struct SettingsView: View {
                     Label("Notification settings", systemImage: "bell.badge")
                 }
                 .listRowBackground(Theme.surface)
+                Button { store.showHowItWorks = true } label: {
+                    Label("How T&F Fantasy works", systemImage: "questionmark.circle")
+                }
+                .listRowBackground(Theme.surface)
+                if store.league?.isCommissioner == true {
+                    NavigationLink(value: LeagueRoute.guide) {
+                        Label("Commissioner Guide", systemImage: "book.closed")
+                    }
+                    .listRowBackground(Theme.surface)
+                }
             }
             PasswordSection()
             Section {
@@ -417,7 +429,11 @@ struct SettingsView: View {
                     row("Invite code", league.code)
                     row("Commissioner", league.team(league.commissionerId)?.ownerName ?? "")
                     row("Teams", "\(league.teams.count) of \(s.maxTeams)")
-                    row("Season", String(league.season))
+                    row("Season", league.seasonLabel ?? String(league.season))
+                    NavigationLink(value: LeagueRoute.pastSeasons) {
+                        Label("Past Seasons", systemImage: "archivebox")
+                    }
+                    .listRowBackground(Theme.surface)
                 }
                 Section("Draft") {
                     row("Type", "Live snake, \(league.draft.rounds) rounds")
@@ -460,6 +476,7 @@ struct SettingsView: View {
                         .listRowBackground(Theme.surface)
                     }
                 }
+                LeaveLeagueSection(league: league)
             }
         }
         .screenBackground()
@@ -471,10 +488,18 @@ struct SettingsView: View {
             Text("Your leagues stay on your account. Sign back in on any phone.")
         }
         .confirmationDialog("Delete your account?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete account", role: .destructive) { Task { await store.deleteAccount() } }
+            Button("Delete account", role: .destructive) {
+                Task {
+                    if let needs = await store.deleteAccount() {
+                        handoffs = needs
+                        showHandoffs = true
+                    }
+                }
+            }
         } message: {
-            Text("This removes your login and your league memberships list. Teams already in leagues stay for the rest of the season.")
+            Text("This removes your login and your league memberships list. Teams already in leagues stay for the rest of the season. If you run a league with other members, you'll pick who takes over first.")
         }
+        .sheet(isPresented: $showHandoffs) { DeleteHandoffSheet(needs: handoffs) }
     }
 
     private func row(_ label: String, _ value: String) -> some View {

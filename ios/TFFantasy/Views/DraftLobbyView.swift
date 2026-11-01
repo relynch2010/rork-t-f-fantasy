@@ -53,9 +53,15 @@ struct DraftLobbyView: View {
     private func commishControls(_ league: LeagueState) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("COMMISSIONER").font(.system(size: 11, weight: .heavy)).tracking(1).foregroundStyle(Theme.gold)
+            let odd = league.teams.count % 2 != 0
+            if odd {
+                Label("The draft needs an even number of teams so every team has an opponent at every meet. You have \(league.teams.count). Invite one more team or remove one.", systemImage: "person.2.slash")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.gold)
+            }
             PrimaryButton(title: "Start Draft Now", systemImage: "play.fill") { confirmStart = true }
-                .opacity(league.teams.count < 2 ? 0.45 : 1)
-                .disabled(league.teams.count < 2)
+                .opacity(league.teams.count < 2 || odd ? 0.45 : 1)
+                .disabled(league.teams.count < 2 || odd)
             NavigationLink(value: LeagueRoute.adpReview) {
                 Label("Draft Rankings (ADP)", systemImage: "list.star")
                     .font(.subheadline.weight(.semibold))

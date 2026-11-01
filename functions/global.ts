@@ -10,6 +10,7 @@ import {
   type Gender, type PerformanceRule, type ScoringConfig, type Standard, type StandardType,
 } from "./scoring";
 import { emptyStats, type Meet } from "./meets";
+import { applySchedule } from "./schedule";
 import type { Pos } from "./seed";
 
 /** The one fixed Main League. Never derived from name, date, order, device, user or local storage. */
@@ -65,6 +66,9 @@ export type GlobalConfig = {
   mainLeagueCode: string;
   /** Who may change global config. Reported by the Main League itself; never taken from a client. */
   mainCommissionerId: string;
+  /** Stage 3: once true, `mainCommissionerId` is the separate platform-commissioner role. Handing off the Main League's
+   *  own commissioner no longer moves platform powers; only an explicit transferPlatformRole does. */
+  platformPinned?: boolean;
   initializedAt: number;
   updatedAt: number;
   updatedBy: string;
@@ -105,6 +109,8 @@ export const GLOBAL_MEET_KEYS = [
   "id", "name", "date", "week", "provider", "status", "eventsUrl", "rosterUrl", "resultsUrl", "isDemo", "polling", "createdAt", "startedAt",
   "finalAt", "lastSyncedAt", "lastAttemptAt", "nextSyncAt", "syncCount", "sourceError", "sourceErrorKind", "sourceErrorAt", "failures",
   "feedHash", "sourceUrl", "resolve", "feedChangedAt", "scope", "reprocessAt", "sourceMeetId", "sourceInfo", "history",
+  // Stage 2 schedule (unset on meets created before it, which keep their original behavior).
+  "location", "startAt", "endAt", "timeZone", "startLocal", "endLocal", "lifecycle", "pendingSince", "complete", "correcting", "changes",
 ] as const;
 
 const clampInt = (v: unknown, min: number, max: number, fallback: number): number => {
@@ -438,6 +444,8 @@ export function applyMeetFields(m: Meet, a: Record<string, unknown>, maxWeek: nu
     m[k] = v;
   }
   if (!m.name) throw new GlobalError("Enter the meet name.");
+  const err = applySchedule(m, a, Date.now());
+  if (err) throw new GlobalError(err);
 }
 
 /** Minutes east of UTC for US Eastern time at instant `t` (handles daylight saving). Falls back to `fallbackMin`. */

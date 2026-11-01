@@ -5,7 +5,7 @@ export const SLOT_LABEL: Record<SlotId, string> = { SPR: "SPR", DIS: "DIS", FLD:
 
 export type Athlete = {
   id: string; name: string; gender: "B" | "G"; positions: string[]; flex: boolean; note: string; rank: number;
-  school?: string; status?: "active" | "Q" | "O" | "IR"; position: string; photo: string | null;
+  school?: string; status?: "active" | "Q" | "D" | "O" | "IR"; position: string; photo: string | null;
 };
 
 export type Team = {
@@ -32,6 +32,10 @@ export type Meet = {
   sourceUrl?: string; resolve?: { ok: boolean; kind: string; message: string; at: number } | null;
   scope?: "global" | "local"; archived?: boolean; tablesMissing?: string[];
   lastTest?: { at: number; ok: boolean; message: string; results: number; matched: number } | null;
+  location?: string; startAt?: number; endAt?: number; timeZone?: string; startLocal?: string; endLocal?: string;
+  lifecycle?: "POSTPONED" | "CANCELED" | "INTERRUPTED"; pendingSince?: number; correcting?: boolean; complete?: boolean;
+  changes?: { at: number; by: string; kind: string; detail: string }[];
+  stage?: "SCHEDULED" | "LIVE" | "PENDING" | "FINAL" | "POSTPONED" | "CANCELED" | "INTERRUPTED"; finalEligibleAt?: number | null;
 };
 
 export type Trade = {

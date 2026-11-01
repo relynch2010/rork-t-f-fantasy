@@ -145,7 +145,7 @@ struct PlayerCardView: View {
                 if a.playerStatus != .active {
                     Text("Status: \(a.playerStatus.label)")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(a.playerStatus == .Q ? Theme.gold : Theme.red)
+                        .foregroundStyle(a.playerStatus.tint)
                 }
                 if !(league.canEditPlayers ?? league.isCommissioner) {
                     Label("Photo, positions and status are set by the Main League", systemImage: "globe")

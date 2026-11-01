@@ -363,6 +363,30 @@ export default {
         return json(result);
       }
       if (path === "/me/delete" && request.method === "POST") {
+        // Stage 3: no league may be left without a commissioner. Every league this account commissions needs a
+        // successor (an existing member) first; the platform commissioner role must be transferred first.
+        const body = ((await request.json().catch(() => ({}))) ?? {}) as { handoffs?: Record<string, string> };
+        const handoffs = body.handoffs && typeof body.handoffs === "object" ? body.handoffs : {};
+        const holder = (await (await doRequest(env, "Directory", "global", "/platform-holder")).json().catch(() => ({}))) as { userId?: string };
+        if (holder.userId && holder.userId === user.id) {
+          return json({ error: "You hold the platform commissioner role. Transfer it to another account in Global Settings before deleting your account.", platformHolder: true }, 409);
+        }
+        const mine = (await (await doRequest(env, "Directory", "global", `/mine?userId=${encodeURIComponent(user.id)}`)).json().catch(() => ({}))) as { leagues?: { leagueId: string }[] };
+        const needs: { leagueId: string; name: string; others: { teamId: string; teamName: string; ownerName: string }[] }[] = [];
+        for (const l of mine.leagues ?? []) {
+          const r = await doRequest(env, "League", l.leagueId, `/commish-check?userId=${encodeURIComponent(user.id)}`);
+          if (!r.ok) continue;
+          const c = (await r.json()) as { isCommissioner?: boolean; name?: string; others?: { teamId: string; teamName: string; ownerName: string }[] };
+          if (c.isCommissioner && (c.others ?? []).length > 0) needs.push({ leagueId: l.leagueId, name: c.name ?? "League", others: c.others ?? [] });
+        }
+        const missing = needs.filter((n) => !handoffs[n.leagueId] || !n.others.some((o) => o.teamId === handoffs[n.leagueId]));
+        if (missing.length > 0) {
+          return json({ error: "Pick a new commissioner for each league you run before deleting your account.", needsHandoff: missing }, 409);
+        }
+        for (const n of needs) {
+          const r = await doRequest(env, "League", n.leagueId, "/handoff", { method: "POST", body: JSON.stringify({ user, teamId: handoffs[n.leagueId] }) });
+          if (!r.ok) return relay(r);
+        }
         return relay(await doRequest(env, "Directory", "global", "/delete-account", { method: "POST", body: JSON.stringify({ id: user.id }) }));
       }
 
@@ -442,7 +466,7 @@ export default {
         return relay(res);
       }
 
-      const match = path.match(/^\/leagues\/([A-Za-z0-9]{8,40})(?:\/(action|preview|athlete|scoring|avatar|athlete-photo|meet-test|meet-lab|matchup|dbstatus|projections|mock|delete|hide|breakdown|tools))?$/);
+      const match = path.match(/^\/leagues\/([A-Za-z0-9]{8,40})(?:\/(action|preview|athlete|scoring|avatar|athlete-photo|meet-test|meet-lab|matchup|dbstatus|projections|mock|delete|hide|breakdown|tools|archive))?$/);
       if (match) {
         const leagueId = match[1] as string;
         const sub = match[2] ?? "";
@@ -459,6 +483,9 @@ export default {
           const week = url.searchParams.get("week") ?? "";
           const teamId = url.searchParams.get("teamId") ?? "";
           return relay(await doRequest(env, "League", leagueId, `/matchup?${uidQ}&week=${encodeURIComponent(week)}&teamId=${encodeURIComponent(teamId)}`));
+        }
+        if (sub === "archive" && request.method === "GET") {
+          return relay(await doRequest(env, "League", leagueId, `/archive?${uidQ}&id=${encodeURIComponent(url.searchParams.get("id") ?? "")}`));
         }
         if (sub === "dbstatus" && request.method === "GET") return relay(await doRequest(env, "League", leagueId, `/dbstatus?${uidQ}`));
         if (sub === "breakdown" && request.method === "GET") {

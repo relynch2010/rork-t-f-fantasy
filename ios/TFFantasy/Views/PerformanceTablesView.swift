@@ -33,7 +33,7 @@ struct PerformanceTablesView: View {
                 Text("The meet's date picks the season's table: a 2027 meet uses the 2027 table. Only the best tier an athlete reaches scores, separately for every event they enter. A season with no table earns no time/mark points.")
             }
             if store.league?.canEditGlobalSettings != true {
-                Section { MainLeagueBanner(text: "Performance tables are the same in every league. Only the Main League commissioner can change them.") }
+                Section { MainLeagueBanner(text: "Performance tables are the same in every league. Only the platform commissioner can change them.") }
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
             }

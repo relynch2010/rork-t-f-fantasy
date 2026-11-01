@@ -25,6 +25,8 @@ nonisolated struct AuthResponse: Codable, Sendable {
 nonisolated struct APIError: LocalizedError, Sendable {
     let message: String
     let status: Int
+    /// Raw error body (used where the server sends structured details, e.g. account-deletion hand-offs).
+    var body: Data? = nil
 
     var errorDescription: String? { message }
 }
@@ -89,7 +91,7 @@ final class APIClient {
         guard (200..<300).contains(status) else {
             let message = (try? decoder.decode(ErrorBody.self, from: data))?.error ?? "Something went wrong (\(status))."
             if status == 401, authed { onUnauthorized?() }
-            throw APIError(message: message, status: status)
+            throw APIError(message: message, status: status, body: data)
         }
         return data
     }
@@ -143,8 +145,9 @@ final class APIClient {
         return try decoder.decode(AuthResponse.self, from: try await send("/me", method: "POST", body: try json(body)))
     }
 
-    func deleteAccount() async throws {
-        _ = try await send("/me/delete", method: "POST", body: try json([:]))
+    /// `handoffs`: leagueId → teamId of the member who takes over as commissioner.
+    func deleteAccount(handoffs: [String: String] = [:]) async throws {
+        _ = try await send("/me/delete", method: "POST", body: try json(["handoffs": handoffs]))
     }
 
     // MARK: Push
@@ -281,6 +284,16 @@ final class APIClient {
 
     func globalLeagues() async throws -> GlobalLeaguesBody {
         try decoder.decode(GlobalLeaguesBody.self, from: try await send("/global/leagues"))
+    }
+
+    /// Platform-level actions (checked by the server against the platform commissioner).
+    func globalAction(_ body: [String: Any]) async throws {
+        _ = try await send("/global/action", method: "POST", body: try json(body))
+    }
+
+    func seasonArchive(leagueId: String, id: String) async throws -> SeasonArchive {
+        let q = id.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? id
+        return try decoder.decode(SeasonArchive.self, from: try await send("/leagues/\(leagueId)/archive?id=\(q)"))
     }
 
     // MARK: League management

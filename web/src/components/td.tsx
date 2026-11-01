@@ -59,8 +59,8 @@ export function PosTag({ position, className }: { position: string; className?: 
 
 export function StatusTag({ status }: { status?: string }) {
   if (!status || status === "active") return null;
-  const label = status === "Q" ? "Q" : status === "O" ? "O" : "IR";
-  return <span className={cn("rounded px-1 text-[10px] font-black", status === "Q" ? "bg-td-gold/20 text-td-gold" : "bg-td-red/20 text-td-red")}>{label}</span>;
+  const label = status === "Q" ? "Q" : status === "D" ? "D" : status === "O" ? "O" : "IR";
+  return <span title={status === "D" ? "Doubtful" : undefined} className={cn("rounded px-1 text-[10px] font-black", status === "Q" ? "bg-td-gold/20 text-td-gold" : status === "D" ? "bg-orange-400/20 text-orange-300" : "bg-td-red/20 text-td-red")}>{label}</span>;
 }
 
 export function LiveDot({ className }: { className?: string }) {

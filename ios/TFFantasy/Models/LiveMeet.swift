@@ -65,6 +65,48 @@ nonisolated struct Meet: Codable, Hashable, Identifiable, Sendable {
     /// Old league-only meet: its points are kept but it no longer runs.
     let archived: Bool?
     let lastTest: MeetLastTest?
+    // League-scheduled meets (optional; older meets have none of these and keep their original behavior).
+    let location: String?
+    let startAt: Double?
+    let endAt: Double?
+    let timeZone: String?
+    let startLocal: String?
+    let endLocal: String?
+    /// POSTPONED / CANCELED / INTERRUPTED overlay.
+    let lifecycle: String?
+    let pendingSince: Double?
+    let correcting: Bool?
+    let complete: Bool?
+    let changes: [MeetChange]?
+    /// Server-derived: SCHEDULED, LIVE, PENDING, FINAL, POSTPONED, CANCELED, INTERRUPTED.
+    let stage: String?
+    let finalEligibleAt: Double?
+
+    var isScheduled: Bool { startAt != nil }
+    var displayStage: String {
+        if let stage { return stage == "UPCOMING" ? "SCHEDULED" : stage }
+        return status == "UPCOMING" ? "UPCOMING" : status
+    }
+    var isPending: Bool { displayStage == "PENDING" }
+
+    /// "Sat, Apr 12, 9:00 AM – 5:00 PM EDT" in the meet's own time zone.
+    var whenLabel: String? {
+        guard let startAt else { return nil }
+        let tz = timeZone.flatMap(TimeZone.init(identifier:)) ?? .current
+        let start = Date(timeIntervalSince1970: startAt / 1000)
+        let f = DateFormatter()
+        f.timeZone = tz
+        f.dateFormat = "EEE, MMM d, h:mm a"
+        var out = f.string(from: start)
+        if let endAt {
+            let end = Date(timeIntervalSince1970: endAt / 1000)
+            var cal = Calendar(identifier: .gregorian)
+            cal.timeZone = tz
+            f.dateFormat = cal.isDate(start, inSameDayAs: end) ? "h:mm a" : "EEE, MMM d, h:mm a"
+            out += " – " + f.string(from: end)
+        }
+        return out + " " + (tz.abbreviation(for: start) ?? tz.identifier)
+    }
 
     var isGlobal: Bool { scope == "global" }
     var isArchived: Bool { archived ?? false }
@@ -77,6 +119,13 @@ nonisolated struct Meet: Codable, Hashable, Identifiable, Sendable {
         default: return "AthleticLIVE"
         }
     }
+}
+
+nonisolated struct MeetChange: Codable, Hashable, Sendable {
+    let at: Double
+    let by: String
+    let kind: String
+    let detail: String
 }
 
 nonisolated struct MeetResolve: Codable, Hashable, Sendable {

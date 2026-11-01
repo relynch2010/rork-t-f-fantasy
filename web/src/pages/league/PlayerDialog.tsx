@@ -74,7 +74,7 @@ export function PlayerDialog({ athleteId, onClose }: { athleteId: string | null;
         {isCommish && (league.canEditPlayers ?? true) && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="text-muted-foreground">Status:</span>
-            {(["active", "Q", "O", "IR"] as const).map((s) => (
+            {(["active", "Q", "D", "O", "IR"] as const).map((s) => (
               <Button key={s} size="sm" variant={(a.status ?? "active") === s ? "default" : "secondary"} onClick={() => act({ type: "setStatus", athleteId: a.id, status: s }, "Status updated")}>{s === "active" ? "Active" : s}</Button>
             ))}
           </div>
