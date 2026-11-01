@@ -1,0 +1,199 @@
+{
+ "checks": [
+  {
+   "name": "League A school is the typed school",
+   "pass": true,
+   "detail": "QA Testville High School"
+  },
+  {
+   "name": "League B school written differently resolves to the same school",
+   "pass": true,
+   "detail": "qa testville hs"
+  },
+  {
+   "name": "League without a school is Cornwall Central (default)",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "New school league starts with no Cornwall players",
+   "pass": true,
+   "detail": "0 players"
+  },
+  {
+   "name": "Cornwall league gets the shared Main League meets",
+   "pass": true,
+   "detail": "7 shared meets"
+  },
+  {
+   "name": "School leagues don't get Cornwall meets",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "Cornwall league starts with the normal Cornwall pool",
+   "pass": true,
+   "detail": "151 players"
+  },
+  {
+   "name": "Import preview sorts rows (24 new, 4 invalid, nothing saved)",
+   "pass": true,
+   "detail": "{\"total\": 28, \"new\": 24, \"added\": 0, \"existing\": 0, \"possible\": 0, \"invalid\": 4}"
+  },
+  {
+   "name": "Preview saved nothing",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "Import commit adds the 24 valid players",
+   "pass": true,
+   "detail": "{\"total\": 28, \"new\": 0, \"added\": 24, \"existing\": 0, \"possible\": 0, \"invalid\": 4}"
+  },
+  {
+   "name": "Same import sent twice runs once",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "League A pool has the 24 imported players",
+   "pass": true,
+   "detail": "24"
+  },
+  {
+   "name": "Second league's import: existing players recognised, look-alike flagged, new ones new",
+   "pass": true,
+   "detail": "{\"total\": 6, \"new\": 1, \"added\": 0, \"existing\": 3, \"possible\": 1, \"invalid\": 1} [[\"Liam Testa\", \"existing\"], [\"Ava Quill\", \"existing\"], [\"Noah Qadir\", \"existing\"], [\"Liam Testa Jr.\", \"invalid\"], [\"Willa Newcomb\", \"new\"], [\"Ethen Vance\", \"possible\"]]"
+  },
+  {
+   "name": "Commit adds only the new player (look-alike held back, existing untouched)",
+   "pass": true,
+   "detail": "{\"total\": 6, \"new\": 0, \"added\": 1, \"existing\": 3, \"possible\": 1, \"invalid\": 1}"
+  },
+  {
+   "name": "Both leagues share the same school identities",
+   "pass": true,
+   "detail": "A 25 B 25"
+  },
+  {
+   "name": "Cornwall league never receives the other school's players",
+   "pass": true,
+   "detail": "156 players, all Cornwall Central"
+  },
+  {
+   "name": "Member (not commissioner) can't import",
+   "pass": true,
+   "detail": "{'_status': 403, 'error': 'Only the commissioner can do that.'}"
+  },
+  {
+   "name": "Member can't add a player",
+   "pass": true,
+   "detail": "Only the commissioner can do that."
+  },
+  {
+   "name": "Outsider can't touch another league",
+   "pass": true,
+   "detail": "{'_status': 403, 'error': 'Not a member of this league.'}"
+  },
+  {
+   "name": "School commissioner can't edit a Cornwall Central player",
+   "pass": true,
+   "detail": "Aiden FitzHarris isn't a QA Testville High School player, so this league can't change them."
+  },
+  {
+   "name": "Non-Main Cornwall commissioner still can't edit shared players",
+   "pass": true,
+   "detail": "Player info is set by the Main League. Only the Main League commissioner can change it."
+  },
+  {
+   "name": "A player's school can't be changed",
+   "pass": true,
+   "detail": "A player's school can't be changed."
+  },
+  {
+   "name": "Status set in League B shows in League A (shared identity)",
+   "pass": true,
+   "detail": "Q"
+  },
+  {
+   "name": "Removed player shows by name in the restore list",
+   "pass": true,
+   "detail": "[{'id': 'calebrowan-qatestville-2', 'name': 'Caleb Rowan'}]"
+  },
+  {
+   "name": "Removing a player affects only that league",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "Removed player can be put back",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "Stage backup written in the test league",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "Backup restores exactly (players, teams)",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "Restore refused outside a test league",
+   "pass": true,
+   "detail": "Stage backups can only be restored here in a throwaway test league."
+  },
+  {
+   "name": "Both leagues drafted independently",
+   "pass": true,
+   "detail": "A season 12 picks, B season 12 picks"
+  },
+  {
+   "name": "Rosters differ per league (same players can be on teams in both)",
+   "pass": true,
+   "detail": "A {'u874249356f764e648c63483': ['avaquill-qatestville-2', 'noahqadir-qatestville-2', 'chloesable-qatestville-2', 'masonorwell-qatestville-2', 'graceunderhill-qatestville-2', 'owenquill-qatestville-2'], 'uadff3e012c754e2abe676bc': ['liamtesta-qatestville-2', 'miarowan-qatestville-2', 'ethanvance-qatestville-2', 'ellathorne-qatestville-2', 'lucaspike-qatestville-2', 'zoevoss-qatestville-2']} B {'ufed305e5969844a7abbe57f': ['liamtesta-qatestville-2', 'miarowan-qatestville-2', 'ethanvance-qatestville-2', 'ellathorne-qatestville-2', 'lucaspike-qatestville-2', 'zoevoss-qatestville-2'], 'ud75dc2f4a1a84b7ab13f3f5': ['avaquill-qatestville-2', 'noahqadir-qatestville-2', 'chloesable-qatestville-2', 'masonorwell-qatestville-2', 'graceunderhill-qatestville-2', 'owenquill-qatestville-2']}"
+  },
+  {
+   "name": "A trade offer in League A doesn't exist in League B",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "League B trades and rosters unchanged",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "School league commissioner schedules a meet locally",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "That meet isn't in League B or the Cornwall league",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "Member can't schedule meets",
+   "pass": true,
+   "detail": "Only the commissioner can do that."
+  },
+  {
+   "name": "School league commissioner can't change universal scoring",
+   "pass": true,
+   "detail": "This is set by the Main League. Only the Main League commissioner can change it."
+  },
+  {
+   "name": "Cornwall (non-Main) league still can't create meets (unchanged)",
+   "pass": true,
+   "detail": "This is set by the Main League. Only the Main League commissioner can change it."
+  },
+  {
+   "name": "School picker lists Cornwall Central and the new school",
+   "pass": true,
+   "detail": "['Cornwall Central', 'QA Testville High School']"
+  }
+ ]
+}

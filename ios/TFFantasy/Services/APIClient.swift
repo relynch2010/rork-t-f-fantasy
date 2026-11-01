@@ -172,8 +172,13 @@ final class APIClient {
         try decoder.decode(LeaguesBody.self, from: try await send("/leagues")).leagues
     }
 
-    func createLeague(name: String, teamName: String, settings: [String: Any]) async throws -> LeagueState {
-        try decodeState(try await send("/leagues", method: "POST", body: try json(["name": name, "teamName": teamName, "settings": settings])))
+    func createLeague(name: String, teamName: String, school: String, settings: [String: Any]) async throws -> LeagueState {
+        try decodeState(try await send("/leagues", method: "POST", body: try json(["name": name, "teamName": teamName, "school": school, "settings": settings])))
+    }
+
+    /// Schools with players on file (for the create-league picker).
+    func schools() async throws -> [SchoolOption] {
+        try decoder.decode(SchoolsBody.self, from: try await send("/schools")).schools
     }
 
     func joinLeague(code: String, teamName: String) async throws -> LeagueState {

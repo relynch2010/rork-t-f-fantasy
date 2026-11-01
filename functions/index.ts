@@ -233,7 +233,7 @@ export default {
     const path = url.pathname;
 
     try {
-      if (path === "/ping") return json({ ok: true, build: "b32-projmeets-yahoo-la", now: new Date().toISOString() });
+      if (path === "/ping") return json({ ok: true, build: "b33-schools", now: new Date().toISOString() });
       // Public, read-only: which league is the Main League and the global config version (no secrets).
       if (path === "/global/status" && request.method === "GET") return relay(await doRequest(env, "Directory", "global", "/global-status"));
       // Public, read-only: the 5-tier table merge report (every kept / replaced / dropped tier) and shared-history stats.
@@ -380,12 +380,25 @@ export default {
         return relay(await doRequest(env, "Directory", "global", "/global-action", { method: "POST", body: JSON.stringify({ user, action, via: null }) }));
       }
 
+      // School names for the create-league picker.
+      if (path === "/schools" && request.method === "GET") return relay(await doRequest(env, "Directory", "global", "/schools"));
+      // Stage data checks: counts (and, for "-before" tags, a one-time backup of every league). Names/ids are hidden
+      // unless the Main League commissioner asks for detail.
+      if (path === "/global/integrity" && request.method === "POST") {
+        const body = (await request.json()) as { tag?: string };
+        return relay(await doRequest(env, "Directory", "global", "/integrity-sweep", { method: "POST", body: JSON.stringify({ tag: body.tag ?? "" }) }));
+      }
+      if (path === "/global/integrity" && request.method === "GET") {
+        const q = new URLSearchParams({ tag: url.searchParams.get("tag") ?? "", detail: url.searchParams.get("detail") ?? "", userId: user.id });
+        return relay(await doRequest(env, "Directory", "global", `/integrity-report?${q.toString()}`));
+      }
+
       if (path === "/leagues" && request.method === "GET") {
         return relay(await doRequest(env, "Directory", "global", `/mine?userId=${encodeURIComponent(user.id)}`));
       }
 
       if (path === "/leagues" && request.method === "POST") {
-        const body = (await request.json()) as { name?: string; teamName?: string; settings?: Record<string, number> };
+        const body = (await request.json()) as { name?: string; teamName?: string; settings?: Record<string, number>; school?: string };
         const leagueId = crypto.randomUUID().replace(/-/g, "").slice(0, 20);
         const name = (body.name ?? "").trim().slice(0, 40) || "Track League";
         const reserve = await doRequest(env, "Directory", "global", "/reserve", { method: "POST", body: JSON.stringify({ leagueId, name }) });
@@ -393,7 +406,7 @@ export default {
         const { code } = (await reserve.json()) as { code: string };
         const init = await doRequest(env, "League", leagueId, "/init", {
           method: "POST",
-          body: JSON.stringify({ id: leagueId, name, code, user, teamName: body.teamName ?? "", settings: body.settings ?? {} }),
+          body: JSON.stringify({ id: leagueId, name, code, user, teamName: body.teamName ?? "", settings: body.settings ?? {}, school: typeof body.school === "string" ? body.school.slice(0, 80) : "" }),
         });
         if (!init.ok) return relay(init);
         await doRequest(env, "Directory", "global", "/member", { method: "POST", body: JSON.stringify({ userId: user.id, leagueId }) });

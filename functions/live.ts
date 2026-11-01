@@ -6,7 +6,7 @@
  *   4. Normalized (nickname / one-typo) name + gender + school
  * Anything weaker is never applied automatically — it becomes an Unmatched Result for the commissioner.
  */
-import { canonSchool, firstNamesAgree, identityKey, isPoolSchool, lastNamesAgree, looseNameMatch, norm, normSchool, poolSchoolOf, sameSchool, schoolsMatch, splitName } from "./names";
+import { canonSchool, CORNWALL_SCOPE, firstNamesAgree, identityKey, isPoolSchool, lastNamesAgree, looseNameMatch, norm, normSchool, schoolsMatch, splitName, type SchoolScope } from "./names";
 import type { Gender } from "./scoring";
 
 export type PoolAthlete = { id: string; name: string; gender: Gender; school: string };
@@ -73,11 +73,13 @@ export function matchPoolAthlete(
   sameNameInMeet: number,
   /** Commissioner-confirmed aliases: identityKey(name)|gender → master player ids. */
   aliases: Map<string, string[]> = new Map(),
+  /** The league's school (existing leagues: Cornwall Central, unchanged rules). */
+  scope: SchoolScope = CORNWALL_SCOPE,
 ): PoolMatch {
   const ids = new Map(pool.map((a) => [a.id, a]));
   const rejected = new Set<string>();
   const full = fullNorm(src);
-  const inPool = isPoolSchool(src.school, src.teamId, src.region);
+  const inPool = scope.isMine(src.school, src.teamId, src.region);
   if (src.sourceId) {
     const link = links.get(src.sourceId);
     if (link?.conflict) {
@@ -98,9 +100,9 @@ export function matchPoolAthlete(
     for (const r of m.rejected) rejected.add(r);
     if (m.athleteId && ids.has(m.athleteId)) return { athleteId: m.athleteId, type: "mapping", confidence: "high", reason: `Confirmed by the commissioner (${m.by}).`, candidates: [], inPool: true };
   }
-  if (!inPool) return { athleteId: null, type: "out_of_pool", confidence: "none", reason: src.school ? `${src.school} isn't Cornwall Central.` : "No school in the source, so Cornwall Central can't be confirmed.", candidates: [], inPool: false };
+  if (!inPool) return { athleteId: null, type: "out_of_pool", confidence: "none", reason: src.school ? `${src.school} isn't ${scope.name}.` : `No school in the source, so ${scope.name} can't be confirmed.`, candidates: [], inPool: false };
   if (!full || !src.gender) return { athleteId: null, type: "none", confidence: "none", reason: "The source has no usable name or gender.", candidates: [], inPool };
-  const eligible = pool.filter((a) => !rejected.has(a.id) && a.gender === src.gender && sameSchool(poolSchoolOf(a.school), "Cornwall Central"));
+  const eligible = pool.filter((a) => !rejected.has(a.id) && a.gender === src.gender && scope.owns(a.school));
   const srcKey = identityKey(`${src.first} ${src.last}`);
   const aliasIds = (aliases.get(`${srcKey}|${src.gender}`) ?? []).filter((id) => eligible.some((a) => a.id === id));
   if (aliasIds.length === 1 && sameNameInMeet <= 1) {
@@ -112,16 +114,16 @@ export function matchPoolAthlete(
   // Exact = same name after harmless differences only (accents, case, punctuation, hyphens, spacing, middle initial, suffix).
   const exact = eligible.filter((a) => norm(a.name) === full || (srcKey.length >= 4 && identityKey(a.name) === srcKey));
   if (exact.length === 1 && sameNameInMeet <= 1) {
-    return { athleteId: (exact[0] as PoolAthlete).id, type: "name_cornwall", confidence: "high", reason: `Exact name + ${src.gender === "G" ? "girls" : "boys"} + Cornwall Central; the only player with this name.`, candidates: [], inPool };
+    return { athleteId: (exact[0] as PoolAthlete).id, type: "name_cornwall", confidence: "high", reason: `Exact name + ${src.gender === "G" ? "girls" : "boys"} + ${scope.name}; the only player with this name.`, candidates: [], inPool };
   }
   if (exact.length > 1 || (exact.length === 1 && sameNameInMeet > 1)) {
-    return { athleteId: null, type: "review", confidence: "none", reason: exact.length > 1 ? `${exact.length} Cornwall players share this name. Needs review.` : `Two Cornwall athletes named ${`${src.first} ${src.last}`.trim()} are in this meet. Needs review.`, candidates: exact.map((a) => a.id), inPool };
+    return { athleteId: null, type: "review", confidence: "none", reason: exact.length > 1 ? `${exact.length} ${scope.name} players share this name. Needs review.` : `Two ${scope.name} athletes named ${`${src.first} ${src.last}`.trim()} are in this meet. Needs review.`, candidates: exact.map((a) => a.id), inPool };
   }
   const loose = eligible.filter((a) => looseNameMatch(a.name, `${src.first} ${src.last}`));
   if (loose.length > 0) {
-    return { athleteId: null, type: "review", confidence: "medium", reason: "Similar name (nickname or spelling) at Cornwall Central. Needs review before any points.", candidates: loose.map((a) => a.id).slice(0, 5), inPool };
+    return { athleteId: null, type: "review", confidence: "medium", reason: `Similar name (nickname or spelling) at ${scope.name}. Needs review before any points.`, candidates: loose.map((a) => a.id).slice(0, 5), inPool };
   }
-  return { athleteId: null, type: "none", confidence: "none", reason: "Cornwall Central athlete not in the player database.", candidates: [], inPool };
+  return { athleteId: null, type: "none", confidence: "none", reason: `${scope.name} athlete not in the player database.`, candidates: [], inPool };
 }
 
 export { canonSchool, isPoolSchool };

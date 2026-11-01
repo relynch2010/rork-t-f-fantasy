@@ -143,6 +143,19 @@ struct CreateLeagueSheet: View {
     @State private var name: String = ""
     @State private var teamName: String = ""
     @State private var maxTeams: Int = 12
+    @State private var school: String = "Cornwall Central"
+    @State private var schools: [SchoolOption] = []
+    @FocusState private var schoolFocused: Bool
+
+    private var trimmedSchool: String { school.trimmingCharacters(in: .whitespaces) }
+    private var isCornwall: Bool {
+        let k = trimmedSchool.lowercased()
+        return k.isEmpty || k.hasPrefix("cornwall central")
+    }
+    private var suggestions: [SchoolOption] {
+        let q = trimmedSchool
+        return schools.filter { q.isEmpty || $0.name.localizedStandardContains(q) }.filter { $0.name.caseInsensitiveCompare(q) != .orderedSame }.prefix(5).map { $0 }
+    }
 
     var body: some View {
         NavigationStack {
@@ -152,12 +165,46 @@ struct CreateLeagueSheet: View {
                     TextField("Your team name", text: $teamName)
                 }
                 Section {
+                    TextField("School name", text: $school)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled()
+                        .focused($schoolFocused)
+                    if schoolFocused {
+                        ForEach(suggestions) { s in
+                            Button {
+                                school = s.name
+                                schoolFocused = false
+                            } label: {
+                                HStack {
+                                    Image(systemName: "building.columns").foregroundStyle(Theme.green)
+                                    Text(s.name).foregroundStyle(.white)
+                                    Spacer()
+                                    Text("\(s.athletes) players").font(.caption).foregroundStyle(Theme.muted)
+                                }
+                            }
+                        }
+                    }
+                } header: {
+                    Text("School")
+                } footer: {
+                    if isCornwall {
+                        Text("Cornwall Central leagues use the shared Cornwall Central player list and the Main League's meets.")
+                    } else if schools.contains(where: { $0.name.caseInsensitiveCompare(trimmedSchool) == .orderedSame }) {
+                        Text("\(trimmedSchool) already has players on file. Your league shares them, and you schedule your own meets.")
+                    } else {
+                        Text("New school: your league starts with an empty player list. Import your roster from Commissioner Tools → Athlete Editor, and schedule your own meets in the Meet Center.")
+                    }
+                }
+                Section {
                     Stepper("Max teams: \(maxTeams)", value: $maxTeams, in: 2...14)
                 } header: {
                     Text("League Size")
                 } footer: {
-                    Text("Scoring, roster spots, season length, playoffs, waivers, trades and every meet come from the Main League, so every league plays by the same rules. Set the draft time and order later in League Settings.")
+                    Text("Scoring, roster spots, season length, playoffs, waivers and trades are the same in every league. Set the draft time and order later in League Settings.")
                 }
+            }
+            .task {
+                schools = await store.schools()
             }
             .scrollContentBackground(.hidden)
             .background(Theme.bg)
@@ -174,6 +221,7 @@ struct CreateLeagueSheet: View {
                                 let ok = await store.createLeague(
                                     name: name,
                                     teamName: teamName,
+                                    school: isCornwall ? "" : trimmedSchool,
                                     settings: ["maxTeams": maxTeams]
                                 )
                                 if ok { dismiss() }

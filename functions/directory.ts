@@ -16,7 +16,7 @@ const TABLES_V2_ENABLED = true;
 const UNSEEDED_DEFAULT = [0.05, 0.1, 0.2, 0.3, 0.4].map((pct) => ({ pct, pts: 0 }));
 import { normalizeFeed, parseCsv, SourceError, type Meet, type RawFeed } from "./meets";
 import { checkSource, fetchMeetFeed, incompleteImport } from "./alive";
-import { looseNameMatch, norm } from "./names";
+import { canonSchool, identityKey, isCornwallName, looseNameMatch, norm, POOL_SCHOOL, sameSchool } from "./names";
 
 type DirEnv = DbEnv & {
   DO: Fetcher & {
@@ -42,7 +42,37 @@ function fnv(text: string): string {
 export type MasterAthlete = {
   id: string; name: string; gender: "B" | "G"; positions: Pos[]; flex: boolean; note: string; rank: number; school: string; rev: number;
   status: "active" | "Q" | "O" | "IR"; photoAt: number | null; crop: { x: number; y: number; zoom: number } | null; retired: boolean;
+  /** Added by another school's league (Cornwall Central leagues never auto-add these). */
+  scoped?: boolean;
 };
+
+/** Stage data-check tags. Only "-before" tags take a backup; a tag's backup is written once. */
+const INTEGRITY_TAGS = new Set(["stage1-before", "stage1-after", "stage2-before", "stage2-after", "stage3-before", "stage3-after", "stage4-before", "stage4-after"]);
+
+type IntegrityReport = {
+  tag: string; at: number; platform: Record<string, number>;
+  leagues: { id: string; ref: string; name: string; ok: boolean; counts: Record<string, number | string>; backup: { complete: boolean; counts: Record<string, number | string> | null; at: number; existed: boolean } | null; error?: string }[];
+  diff?: { matched: boolean; missingLeagues: string[]; newLeagues: string[]; changes: { ref: string; field: string; before: number | string; after: number | string }[]; platform: { field: string; before: number; after: number }[] };
+};
+
+function diffIntegrity(a: IntegrityReport, b: IntegrityReport): NonNullable<IntegrityReport["diff"]> {
+  const byA = new Map(a.leagues.map((l) => [l.id, l]));
+  const byB = new Map(b.leagues.map((l) => [l.id, l]));
+  const changes: NonNullable<IntegrityReport["diff"]>["changes"] = [];
+  for (const [id, la] of byA) {
+    const lb = byB.get(id);
+    if (!lb) continue;
+    for (const k of new Set([...Object.keys(la.counts), ...Object.keys(lb.counts)])) {
+      if (la.counts[k] !== lb.counts[k]) changes.push({ ref: la.ref, field: k, before: la.counts[k] ?? "", after: lb.counts[k] ?? "" });
+    }
+  }
+  const platform = Object.keys(a.platform).filter((k) => a.platform[k] !== b.platform[k]).map((k) => ({ field: k, before: a.platform[k] ?? 0, after: b.platform[k] ?? 0 }));
+  const missingLeagues = [...byA.keys()].filter((id) => !byB.has(id)).map((id) => byA.get(id)?.ref ?? "");
+  const newLeagues = [...byB.keys()].filter((id) => !byA.has(id)).map((id) => byB.get(id)?.ref ?? "");
+  return { matched: changes.length === 0 && platform.length === 0 && missingLeagues.length === 0, missingLeagues, newLeagues, changes, platform };
+}
+
+type ImportRow = { name?: unknown; gender?: unknown; position?: unknown; grade?: unknown; confirmNew?: unknown };
 
 type AthleteRow = {
   id: string; name: string; gender: string; positions: string; flex: number; note: string; rank: number; school: string;
@@ -245,6 +275,12 @@ export class Directory extends DurableObject<DirEnv> {
         updated_at INTEGER NOT NULL
       );
       CREATE INDEX IF NOT EXISTS push_devices_user ON push_devices(user_id);
+      CREATE TABLE IF NOT EXISTS school_athletes (
+        id TEXT PRIMARY KEY,
+        school_key TEXT NOT NULL,
+        league_id TEXT NOT NULL,
+        at INTEGER NOT NULL
+      );
       CREATE TABLE IF NOT EXISTS pool_log (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         athlete_id TEXT NOT NULL,
@@ -331,7 +367,14 @@ export class Directory extends DurableObject<DirEnv> {
   }
 
   private allMaster(): MasterAthlete[] {
-    return this.ctx.storage.sql.exec<AthleteRow>("SELECT * FROM athletes ORDER BY rank").toArray().map(toMaster);
+    return this.tagScoped(this.ctx.storage.sql.exec<AthleteRow>("SELECT * FROM athletes ORDER BY rank").toArray().map(toMaster));
+  }
+
+  /** Marks players that were added by another school's league. */
+  private tagScoped(rows: MasterAthlete[]): MasterAthlete[] {
+    const ids = new Set(this.ctx.storage.sql.exec<{ id: string }>("SELECT id FROM school_athletes").toArray().map((r) => r.id));
+    if (ids.size === 0) return rows;
+    return rows.map((r) => (ids.has(r.id) ? { ...r, scoped: true } : r));
   }
 
   private async ensurePool(): Promise<void> {
@@ -449,10 +492,227 @@ export class Directory extends DurableObject<DirEnv> {
     }
     const saved = this.athleteRow(next.id);
     if (!saved || saved.rev !== rev) throw new GlobalError("The player couldn't be saved. Try again.");
-    const out = toMaster(saved);
+    const out = this.tagScoped([toMaster(saved)])[0] as MasterAthlete;
     this.mirrorAthletes([out]);
     this.fanOut([out]);
     return out;
+  }
+
+  /** Platform counts + every league's counts. "-before" tags also write (once) and verify a full backup of each league. */
+  private async integritySweep(tag: string): Promise<IntegrityReport> {
+    const backup = tag.endsWith("-before");
+    const one = (q: string): number => Number(this.ctx.storage.sql.exec<{ n: number }>(q).toArray()[0]?.n ?? 0);
+    const platform = {
+      leagues: one("SELECT COUNT(*) AS n FROM leagues"), memberships: one("SELECT COUNT(*) AS n FROM memberships"),
+      accounts: one("SELECT COUNT(*) AS n FROM accounts"), athletes: one("SELECT COUNT(*) AS n FROM athletes WHERE retired = 0"),
+      retired: one("SELECT COUNT(*) AS n FROM athletes WHERE retired = 1"), sourceLinks: one("SELECT COUNT(*) AS n FROM source_links"),
+      aliases: one("SELECT COUNT(*) AS n FROM aliases"), pushDevices: one("SELECT COUNT(*) AS n FROM push_devices"),
+      schoolAthletes: one("SELECT COUNT(*) AS n FROM school_athletes"),
+    };
+    if (backup && !(await this.ctx.storage.get(`backup:stage:${tag}:platform`))) {
+      await this.ctx.storage.put(`backup:stage:${tag}:platform`, {
+        at: Date.now(), platform,
+        leagues: this.ctx.storage.sql.exec("SELECT * FROM leagues").toArray(), memberships: this.ctx.storage.sql.exec("SELECT * FROM memberships").toArray(),
+      });
+      await this.ctx.storage.put(`backup:stage:${tag}:athletes`, this.ctx.storage.sql.exec("SELECT * FROM athletes").toArray());
+    }
+    const ids = this.ctx.storage.sql.exec<{ league_id: string }>("SELECT league_id FROM leagues ORDER BY created_at").toArray().map((r) => r.league_id);
+    const leagues: IntegrityReport["leagues"] = [];
+    for (const id of ids) {
+      try {
+        const r = await this.leagueFetch(id, "/integrity", { method: "POST", body: JSON.stringify({ tag, backup }) });
+        const d = (await r.json().catch(() => ({}))) as { name?: string; counts?: Record<string, number | string>; backup?: { complete: boolean; counts: Record<string, number | string> | null; at: number; existed: boolean } };
+        leagues.push({ id, ref: fnv(id).slice(0, 6), name: d.name ?? "", ok: r.ok, counts: d.counts ?? {}, backup: d.backup ?? null });
+      } catch (e) {
+        leagues.push({ id, ref: fnv(id).slice(0, 6), name: "", ok: false, counts: {}, backup: null, error: String(e).slice(0, 120) });
+      }
+    }
+    const report: IntegrityReport = { tag, at: Date.now(), platform, leagues };
+    // Compare with the matching "-before" run.
+    if (tag.endsWith("-after")) {
+      const before = await this.ctx.storage.get<IntegrityReport>(`integrity:${tag.replace(/-after$/, "-before")}`);
+      if (before) report.diff = diffIntegrity(before, report);
+    }
+    await this.ctx.storage.put(`integrity:${tag}`, report);
+    console.log("integrity", tag, JSON.stringify(this.publicIntegrity(report)).slice(0, 4000));
+    return report;
+  }
+
+  /** The data check without league names, ids or commissioner ids (safe for any signed-in user). */
+  private publicIntegrity(r: IntegrityReport): Record<string, unknown> {
+    const strip = (c: Record<string, number | string> | null | undefined): Record<string, number | string> | null => {
+      if (!c) return null;
+      const { commissionerId: _c, school, ...rest } = c;
+      return { ...rest, customSchool: school ? 1 : 0 };
+    };
+    const totals: Record<string, number> = {};
+    for (const l of r.leagues) for (const [k, v] of Object.entries(l.counts)) if (typeof v === "number") totals[k] = (totals[k] ?? 0) + v;
+    return {
+      tag: r.tag, at: r.at, platform: r.platform, totals,
+      leagues: r.leagues.map((l) => ({ ref: l.ref, ok: l.ok, counts: strip(l.counts), backup: l.backup ? { complete: l.backup.complete, existed: l.backup.existed, at: l.backup.at, counts: strip(l.backup.counts) } : null, error: l.error })),
+      diff: r.diff ? { ...r.diff, changes: r.diff.changes.map((c) => ({ ...c, before: c.field === "commissionerId" ? "(id)" : c.before, after: c.field === "commissionerId" ? (c.before === c.after ? "(same)" : "(changed)") : c.after })) } : undefined,
+    };
+  }
+
+  /**
+   * Shared identities for a school other than Cornwall Central. Any commissioner of a league at that school may add
+   * players, edit them and set statuses (every change is logged). The league itself says who its commissioner is and
+   * which school it plays for; nothing is taken from the client. A player's school can't be changed here.
+   */
+  private async schoolAction(user: GUser, action: Record<string, unknown>, via: string | null): Promise<Response> {
+    if (!via) return this.gerr("Only a league commissioner can change player info.", 403);
+    const w = await this.leagueFetch(via, "/school-whois");
+    if (!w.ok) return this.gerr("That league wasn't found.", 403);
+    const who = (await w.json()) as { commissionerId?: string; school?: string; cornwall?: boolean };
+    if (who.cornwall || !who.school) return this.gerr("Cornwall Central players are managed by the Main League commissioner.", 403);
+    if (!who.commissionerId || who.commissionerId !== user.id) return this.gerr("Only this league's commissioner can change player info.", 403);
+    const school = who.school;
+    await this.ensurePool();
+    const str = (k: string): string => String(action[k] ?? "").trim();
+    const type = str("type");
+    const src = `${user.name} (${user.id}) via league ${via}`;
+    try {
+      if (type === "addAthlete") {
+        const got = this.addSchoolAthlete({ name: action.name, gender: action.gender, position: action.position ?? action.pos ?? action.positions }, school, via, user, src);
+        if (got.status === "existing") return Response.json({ error: `${got.athlete.name} (${got.athlete.school}) is already in the player database.`, athlete: got.athlete, existing: true }, { status: 409 });
+        return Response.json({ athlete: got.athlete });
+      }
+      if (type === "importAthletes") return Response.json(await this.importAthletes(action, school, via, user, src));
+      const row = this.athleteRow(str("athleteId") || str("id"));
+      if (!row || row.retired === 1) throw new GlobalError("Player not found.");
+      if (!row.school.trim() || !sameSchool(row.school, school)) return this.gerr(`${row.name} isn't a ${school} player, so this league can't change them.`, 403);
+      const cur = toMaster(row);
+      const next: MasterAthlete = { ...cur };
+      const changes: [string, string, string][] = [];
+      if (type === "editAthlete") {
+        if (action.school !== undefined && !sameSchool(str("school") || school, school)) throw new GlobalError("A player's school can't be changed.");
+        if (action.expectRev !== undefined && Number(action.expectRev) !== row.rev) {
+          return Response.json({ error: `${cur.name} was just changed. Showing the latest.`, athlete: cur }, { status: 409 });
+        }
+        const posCode = (p: { positions: Pos[]; flex: boolean }): string => (p.flex ? "FLEX" : ALL_POS.filter((x) => p.positions.includes(x)).join("/"));
+        if (str("name")) next.name = str("name").slice(0, 40);
+        if (action.gender !== undefined) next.gender = str("gender") === "G" ? "G" : "B";
+        if (action.note !== undefined) next.note = str("note").slice(0, 400);
+        const pos = this.parsePositions(action.position ?? action.pos, action.positions);
+        if (pos) { next.positions = pos.positions; next.flex = pos.flex; }
+        if (next.name !== cur.name) changes.push(["name", cur.name, next.name]);
+        if (next.gender !== cur.gender) changes.push(["gender", cur.gender, next.gender]);
+        if (next.note !== cur.note) changes.push(["note", cur.note, next.note]);
+        if (posCode(next) !== posCode(cur)) changes.push(["positions", posCode(cur), posCode(next)]);
+      } else if (type === "setStatus") {
+        next.status = cleanStatus(str("status"));
+        if (next.status !== cur.status) changes.push(["status", cur.status, next.status]);
+      } else if (type === "retireAthlete") {
+        // Only for a mistake: the league that added the player can take them off the shared list (owned players stay where they are).
+        const origin = this.ctx.storage.sql.exec<{ league_id: string }>("SELECT league_id FROM school_athletes WHERE id = ?", cur.id).toArray()[0];
+        if (origin?.league_id !== via) return this.gerr(`${cur.name} was added by another league, so only that league can remove them from the shared list.`, 403);
+        next.retired = true;
+        changes.push(["retired", "no", "yes"]);
+      } else {
+        throw new GlobalError("Unknown player change.");
+      }
+      if (changes.length === 0) return Response.json({ athlete: this.tagScoped([cur])[0], changed: false });
+      const out = this.saveMaster(next, row.rev, user);
+      for (const [f, o, n] of changes) this.logChange(cur.id, f, o, n, src);
+      return Response.json({ athlete: out, changed: true });
+    } catch (e) {
+      if (e instanceof GlobalError) return this.gerr(e.message);
+      throw e;
+    }
+  }
+
+  /** Same-school players with this exact identity (accents, case, punctuation, middle initials ignored). */
+  private sameSchoolRows(name: string, school: string): AthleteRow[] {
+    const key = identityKey(name);
+    const base = normalizeName(name);
+    const rows = this.ctx.storage.sql.exec<AthleteRow>("SELECT * FROM athletes WHERE retired = 0 AND school != ''").toArray();
+    return rows.filter((r) => sameSchool(r.school, school) && (normalizeName(r.name) === base || (key.length >= 4 && identityKey(r.name) === key)));
+  }
+
+  /** Validates one roster row. Returns the problem, or the clean fields. */
+  private checkImportRow(r: ImportRow): { error: string } | { name: string; gender: "B" | "G"; positions: Pos[]; flex: boolean; grade: string } {
+    const name = String(r.name ?? "").replace(/\s+/g, " ").trim().slice(0, 40);
+    if (!name || !normalizeName(name) || name.split(" ").length < 2) return { error: "Needs a first and last name." };
+    const g = String(r.gender ?? "").trim().toUpperCase();
+    const gender = g === "B" || g === "M" || g === "BOYS" || g === "BOY" ? "B" : g === "G" || g === "F" || g === "W" || g === "GIRLS" || g === "GIRL" ? "G" : null;
+    if (!gender) return { error: "Gender must be B or G." };
+    let pos: { positions: Pos[]; flex: boolean } | null = null;
+    try { pos = this.parsePositions(String(r.position ?? ""), null); } catch { pos = null; }
+    if (!pos) return { error: "Position must be SPR, DIS, FLD or FLEX (or a combo like SPR/DIS)." };
+    const grade = String(r.grade ?? "").trim().slice(0, 4);
+    return { name, gender, ...pos, grade };
+  }
+
+  private addSchoolAthlete(r: ImportRow, school: string, leagueId: string, user: GUser, src: string): { status: "new" | "existing"; athlete: MasterAthlete } {
+    const c = this.checkImportRow(r);
+    if ("error" in c) throw new GlobalError(c.error);
+    const dupe = this.sameSchoolRows(c.name, school).find((x) => x.gender === c.gender) ?? this.sameSchoolRows(c.name, school)[0];
+    if (dupe) return { status: "existing", athlete: this.tagScoped([toMaster(dupe)])[0] as MasterAthlete };
+    const base = normalizeName(c.name);
+    const key = canonSchool(school);
+    let id = this.athleteRow(base) ? `${base}-${key}` : base;
+    for (let i = 2; this.athleteRow(id); i++) id = `${base}-${key}-${i}`;
+    const rank = (this.ctx.storage.sql.exec<{ m: number | null }>("SELECT MAX(rank) AS m FROM athletes").toArray()[0]?.m ?? -1) + 1;
+    this.ctx.storage.sql.exec("INSERT OR IGNORE INTO school_athletes (id, school_key, league_id, at) VALUES (?, ?, ?, ?)", id, key, leagueId, Date.now());
+    const out = this.saveMaster({
+      id, name: c.name, gender: c.gender, positions: c.positions, flex: c.flex, note: "", rank, school, rev: 0, status: "active", photoAt: null, crop: null, retired: false,
+    }, null, user);
+    this.logChange(id, "added", "", c.name, src);
+    return { status: "new", athlete: out };
+  }
+
+  /**
+   * Roster import (pasted list or spreadsheet). "preview" sorts every row into new / existing / possible duplicate /
+   * invalid and changes nothing. "commit" adds only new rows (and possible duplicates the commissioner confirmed as
+   * different people). Existing players are never overwritten. A repeated requestId returns the first result.
+   */
+  private async importAthletes(action: Record<string, unknown>, school: string, leagueId: string, user: GUser, src: string): Promise<Record<string, unknown>> {
+    const rows = (Array.isArray(action.rows) ? action.rows : []).slice(0, 400) as ImportRow[];
+    if (rows.length === 0) throw new GlobalError("Paste at least one player.");
+    const commit = action.mode === "commit";
+    const requestId = String(action.requestId ?? "").replace(/[^A-Za-z0-9-]/g, "").slice(0, 64);
+    if (commit && !requestId) throw new GlobalError("Missing request id.");
+    if (commit) {
+      const prior = await this.ctx.storage.get<Record<string, unknown>>(`import:${leagueId}:${requestId}`);
+      if (prior) return { ...prior, repeated: true };
+    }
+    const all = this.ctx.storage.sql.exec<AthleteRow>("SELECT * FROM athletes WHERE retired = 0 AND school != ''").toArray().filter((r) => sameSchool(r.school, school));
+    const seen = new Set<string>();
+    const out: Record<string, unknown>[] = [];
+    const added: MasterAthlete[] = [];
+    for (const [i, r] of rows.entries()) {
+      const c = this.checkImportRow(r);
+      const raw = { name: String(r.name ?? ""), gender: String(r.gender ?? ""), position: String(r.position ?? ""), grade: String(r.grade ?? "") };
+      if ("error" in c) { out.push({ row: i + 1, ...raw, status: "invalid", reason: c.error }); continue; }
+      const fileKey = `${identityKey(c.name)}|${c.gender}`;
+      if (seen.has(fileKey)) { out.push({ row: i + 1, ...raw, status: "invalid", reason: "Listed twice in this import." }); continue; }
+      seen.add(fileKey);
+      const exact = this.sameSchoolRows(c.name, school);
+      if (exact.length > 0) {
+        const m = exact[0] as AthleteRow;
+        out.push({ row: i + 1, ...raw, status: "existing", athleteId: m.id, match: m.name, reason: `Already on file as ${m.name}. Nothing changes.` });
+        continue;
+      }
+      const loose = all.filter((x) => x.gender === c.gender && looseNameMatch(x.name, c.name));
+      if (loose.length > 0 && r.confirmNew !== true) {
+        out.push({ row: i + 1, ...raw, status: "possible", candidates: loose.slice(0, 3).map((x) => ({ id: x.id, name: x.name })), reason: `Looks like ${loose.slice(0, 3).map((x) => x.name).join(", ")}. Confirm it's a different person to add.` });
+        continue;
+      }
+      if (!commit) { out.push({ row: i + 1, ...raw, status: "new", reason: loose.length ? "Confirmed as a different person." : "New player." }); continue; }
+      const got = this.addSchoolAthlete(r, school, leagueId, user, `${src} (roster import)`);
+      if (got.status === "existing") { out.push({ row: i + 1, ...raw, status: "existing", athleteId: got.athlete.id, match: got.athlete.name, reason: "Already on file. Nothing changes." }); continue; }
+      added.push(got.athlete);
+      all.push(this.athleteRow(got.athlete.id) as AthleteRow);
+      out.push({ row: i + 1, ...raw, status: "added", athleteId: got.athlete.id, reason: "Added." });
+    }
+    const count = (st: string): number => out.filter((x) => x.status === st).length;
+    const result = {
+      school, mode: commit ? "commit" : "preview", rows: out,
+      summary: { total: rows.length, new: count("new"), added: count("added"), existing: count("existing"), possible: count("possible"), invalid: count("invalid") },
+      athletes: added,
+    };
+    if (commit) await this.ctx.storage.put(`import:${leagueId}:${requestId}`, { ...result, athletes: [] });
+    return result;
   }
 
   /** Every master-player change: Main League commissioner only (asked of the Main League itself), validated, logged, pushed. */
@@ -559,7 +819,7 @@ export class Directory extends DurableObject<DirEnv> {
       }
       const since = Number(url.searchParams.get("since") ?? "0") || 0;
       const rows = this.ctx.storage.sql.exec<AthleteRow>("SELECT * FROM athletes WHERE rev > ? ORDER BY rank", since).toArray();
-      return Response.json({ migrated: true, rev: Number(this.meta("pool_rev") ?? "0"), athletes: rows.map(toMaster) });
+      return Response.json({ migrated: true, rev: Number(this.meta("pool_rev") ?? "0"), athletes: this.tagScoped(rows.map(toMaster)) });
     }
 
     if (request.method === "GET" && url.pathname === "/master-photo") {
@@ -572,6 +832,46 @@ export class Directory extends DurableObject<DirEnv> {
       return new Response(Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0)), {
         headers: { "Content-Type": "image/jpeg", "Cache-Control": current ? "public, max-age=31536000, immutable" : "no-store", ETag: `"${id}-${r.photo_at}"` },
       });
+    }
+
+    if (request.method === "POST" && url.pathname === "/integrity-sweep") {
+      const b = (await request.json()) as { tag?: string };
+      const tag = String(b.tag ?? "");
+      if (!INTEGRITY_TAGS.has(tag)) return this.gerr("Unknown check.");
+      const last = Number(this.meta("integrity_last_run") ?? "0");
+      if (Date.now() - last < 2 * 60_000) return this.gerr("A data check just ran. Try again in a couple of minutes.", 429);
+      this.setMeta("integrity_last_run", String(Date.now()));
+      return Response.json(this.publicIntegrity(await this.integritySweep(tag)));
+    }
+
+    if (request.method === "GET" && url.pathname === "/integrity-report") {
+      const tag = url.searchParams.get("tag") ?? "";
+      const rep = await this.ctx.storage.get<IntegrityReport>(`integrity:${tag}`);
+      if (!rep) return this.gerr("No data check has run for that tag yet.", 404);
+      const c = await this.config();
+      const detail = url.searchParams.get("detail") === "1" && !!c.mainLeagueId && (await this.mainCommissioner(c)) === (url.searchParams.get("userId") ?? "-");
+      return Response.json(detail ? rep : this.publicIntegrity(rep));
+    }
+
+    if (request.method === "POST" && url.pathname === "/school-action") {
+      const b = (await request.json()) as { user?: GUser; action?: Record<string, unknown>; via?: string | null };
+      if (!b.user?.id) return this.gerr("Sign in again.", 401);
+      return this.schoolAction(b.user, b.action ?? {}, b.via ?? null);
+    }
+
+    if (request.method === "GET" && url.pathname === "/schools") {
+      // School names for the create-league picker: every school with players on file, plus Cornwall Central.
+      const rows = this.ctx.storage.sql.exec<{ school: string; n: number }>("SELECT school, COUNT(*) AS n FROM athletes WHERE retired = 0 GROUP BY school").toArray();
+      const by = new Map<string, { name: string; athletes: number }>();
+      for (const r of rows) {
+        const name = r.school.trim() || POOL_SCHOOL;
+        const k = canonSchool(name);
+        if (!k) continue;
+        const cur = by.get(k) ?? { name: isCornwallName(name) ? POOL_SCHOOL : name, athletes: 0 };
+        cur.athletes += r.n;
+        by.set(k, cur);
+      }
+      return Response.json({ schools: [...by.values()].sort((a, b) => b.athletes - a.athletes || a.name.localeCompare(b.name)).slice(0, 200) });
     }
 
     if (request.method === "POST" && url.pathname === "/master-action") {

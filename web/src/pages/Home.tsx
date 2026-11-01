@@ -106,8 +106,13 @@ function CreateDialog({ open, onClose, onDone }: { open: boolean; onClose: () =>
   const [name, setName] = useState<string>("");
   const [teamName, setTeamName] = useState<string>("");
   const [maxTeams, setMaxTeams] = useState<number>(12);
+  const [school, setSchool] = useState<string>("Cornwall Central");
+  const schools = useQuery({ queryKey: ["schools"], queryFn: () => api<{ schools: { name: string; athletes: number }[] }>("/schools"), enabled: open });
+  const clean = school.trim();
+  const cornwall = !clean || clean.toLowerCase().startsWith("cornwall central");
+  const known = (schools.data?.schools ?? []).some((x) => x.name.toLowerCase() === clean.toLowerCase());
   const m = useMutation({
-    mutationFn: () => api<LeagueState>("/leagues", { body: { name, teamName, settings: { maxTeams } } }),
+    mutationFn: () => api<LeagueState>("/leagues", { body: { name, teamName, school: cornwall ? "" : clean, settings: { maxTeams } } }),
     onSuccess: (s) => { toast.success("League created"); onClose(); onDone(s.id); },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -118,8 +123,18 @@ function CreateDialog({ open, onClose, onDone }: { open: boolean; onClose: () =>
         <div className="space-y-4">
           <div className="space-y-1.5"><Label>League name</Label><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={40} /></div>
           <div className="space-y-1.5"><Label>Your team name</Label><Input value={teamName} onChange={(e) => setTeamName(e.target.value)} maxLength={28} /></div>
+          <div className="space-y-1.5">
+            <Label>School</Label>
+            <Input value={school} onChange={(e) => setSchool(e.target.value)} maxLength={60} list="td-schools" />
+            <datalist id="td-schools">{(schools.data?.schools ?? []).map((x) => <option key={x.name} value={x.name} />)}</datalist>
+            <p className="text-xs text-muted-foreground">
+              {cornwall ? "Cornwall Central leagues use the shared Cornwall Central player list and the Main League's meets."
+                : known ? `${clean} already has players on file. Your league shares them, and you schedule your own meets.`
+                : "New school: your league starts with an empty player list. Import your roster in the iPhone app (Commissioner Tools → Athlete Editor) and schedule your own meets."}
+            </p>
+          </div>
           <div className="space-y-1.5"><Label>Max teams ({maxTeams})</Label><input type="range" min={2} max={14} value={maxTeams} onChange={(e) => setMaxTeams(Number(e.target.value))} className="w-full accent-[hsl(var(--td-green))]" /></div>
-          <p className="rounded-xl bg-td-surface2 p-3 text-xs text-muted-foreground">Scoring, roster spots, season length, playoffs, waivers, trades and every meet come from the Main League, so every league plays by the same rules. Set the draft time and order in League Settings.</p>
+          <p className="rounded-xl bg-td-surface2 p-3 text-xs text-muted-foreground">Scoring, roster spots, season length, playoffs, waivers and trades are the same in every league. Set the draft time and order in League Settings.</p>
         </div>
         <DialogFooter><Button className="rounded-full font-bold" disabled={m.isPending} onClick={() => m.mutate()}>Create league</Button></DialogFooter>
       </DialogContent>

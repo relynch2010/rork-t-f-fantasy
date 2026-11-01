@@ -85,7 +85,7 @@ export type LeagueState = {
   rankings: string[]; lastCompletedWeek: number; totalWeeks: number; me: string; serverNow: number;
   meets: Meet[]; adp: string[]; unmatched: Unmatched[]; unmatchedCount: number;
   isMainLeague: boolean; mainLeagueCode: string; canEditGlobal: boolean; shapePending: boolean; global: GlobalSetup | null; globalVersion: number;
-  nextWaiverRun?: number; canEditPlayers?: boolean; waiverPriorityOrder?: string[];
+  nextWaiverRun?: number; canEditPlayers?: boolean; school?: string; schoolIsDefault?: boolean; runsOwnMeets?: boolean; waiverPriorityOrder?: string[];
   /** The finished week stays up until this time (next Monday 12:00 AM ET), then the next matchup activates. */
   nextWeekAt?: number | null;
   /** athleteId → open "possible match" results waiting for commissioner review (the "?" indicator). */

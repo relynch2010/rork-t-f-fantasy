@@ -13,7 +13,7 @@ import {
 import { aliveImport, checkSource, fetchMeetFeed, incompleteImport, resolveAliveUrl, verifyMeet, type AliveImport, type Fault, type SourceStep } from "./alive";
 import { hasTable, MODEL_VERSION, project, winProbability, type Projection } from "./projections";
 import { bibKey, fullNorm, matchPoolAthlete, nameKey, type Mapping, type PoolAthlete, type PoolMatch, type SourceAthlete, type SourceLink } from "./live";
-import { identityKey, isPoolSchool, looseNameMatch, norm, normSchool, POOL_SCHOOL, poolSchoolOf } from "./names";
+import { cleanSchoolName, identityKey, isCornwallName, isPoolSchool, looseNameMatch, norm, normSchool, POOL_SCHOOL, poolSchoolOf, schoolScope, type SchoolScope } from "./names";
 import { DEFAULT_ADP, resolveAdp, type AdpEntry } from "./adp";
 import { Db } from "./db";
 import {
@@ -91,6 +91,8 @@ const MAX_PHOTO_B64 = 120_000;
 type MasterAthlete = {
   id: string; name: string; gender: Gender; positions: Pos[]; flex: boolean; note: string; rank: number; school: string; rev: number;
   status?: AthStatus; photoAt?: number | null; crop?: { x: number; y: number; zoom: number } | null; retired?: boolean;
+  /** Added through a school league's roster tools (never auto-added to Cornwall Central leagues). */
+  scoped?: boolean;
 };
 
 /** Player changes that belong to the master player database (Main League commissioner only, applied to every league). */
@@ -335,6 +337,10 @@ type State = {
   poolRev?: number;
   /** Master athletes this league removed from its own pool. */
   poolExcluded?: string[];
+  /** Names of players removed from this league's pool (for the restore list). */
+  poolExcludedNames?: Record<string, string>;
+  /** The league's school. Blank/undefined = Cornwall Central (every league created before schools existed). */
+  school?: string;
   /** record key → [league version it last changed at, client that changed it]. Stale-write protection. */
   touched?: Record<string, [number, string]>;
   /** Recently applied client request ids, so a retried request never runs twice. */
@@ -408,6 +414,9 @@ const GLOBAL_ACTIONS = new Set([
 
 /** Admin Panel tool ops (every one re-checks access on the server). */
 const ADMIN_OPS = new Set(["scoringExport", "liveActivityPreview", "projMeets", "projMeetPreview", "projMeetAdd", "projMeetRemove", "projMeetsRebuild", "adminAccess", "draftLoad", "draftSave", "draftClear", "draftPreview", "sandboxPublish", "sandboxRestore", "adminVersions", "changelog", "projHealth", "validateData", "audit", "backtestArmory", "fingerprint", "enableSandbox"]);
+
+/** Meet actions a non-Cornwall league runs locally (its own schedule). */
+const LOCAL_MEET_ACTIONS = new Set(["createMeet", "updateMeet", "deleteMeet", "resolveMeet", "startLive", "stopLive", "syncMeet", "markFinal", "reopenMeet"]);
 
 const DIR_HEADERS = { "Content-Type": "application/json", "X-Rork-DO-Class": "Directory", "X-Rork-DO-Id": "global" };
 /** Last season's (2025-26) Armory meets on AthleticLIVE: the projection library's real source data. */
@@ -637,6 +646,10 @@ export class League extends DurableObject<Env> {
       let a = this.maybeAthlete(m.id);
       if (!a) {
         if (m.retired || excluded.has(m.id)) continue;
+        // Only this league's school joins its pool. Cornwall Central leagues keep the original rule (every master player)
+        // except players added by another school's league.
+        const sc = this.scope();
+        if (sc.cornwall ? m.scoped === true : !sc.owns(m.school)) continue;
         a = { id: m.id, name: m.name, gender: m.gender, positions: [...m.positions], flex: m.flex, note: m.note ?? "", rank: m.rank ?? s.athletes.length, school: m.school ?? "" };
         s.athletes.push(a);
         changed = true;
@@ -694,6 +707,7 @@ export class League extends DurableObject<Env> {
   /** Sends a player change to the master database (the Directory checks the Main League commissioner) and applies it here. */
   private async forwardMaster(user: User, action: Record<string, unknown>): Promise<void> {
     const s = this.require();
+    if (!this.isHome()) return this.forwardSchool(user, action);
     if (!this.isMain()) throw new ForbiddenError("Player info is set by the Main League. Only the Main League commissioner can change it.");
     const r = await this.env.DO.fetch(new Request("https://internal/master-action", {
       method: "POST", headers: DIR_HEADERS, body: JSON.stringify({ user, action, via: s.id }),
@@ -703,6 +717,64 @@ export class League extends DurableObject<Env> {
     if (!r.ok) throw new ActionError(out.error ?? "The player couldn't be saved. Nothing was changed.");
     if (out.athlete) this.applyMaster([out.athlete], true);
     this.audit(user, `master.${String(action.type ?? "")}`, `${out.athlete?.name ?? ""}`);
+  }
+
+  /** Pulls master players newer than `since` right away (used when a school league is created or a player is restored). */
+  private async pullPool(since: number, force = false): Promise<void> {
+    const r = await this.dirGet(`/athletes?since=${since}`);
+    if (!r.ok) return;
+    const body = (await r.json()) as { athletes?: MasterAthlete[] };
+    if (this.state && this.applyMaster(body.athletes ?? [], force)) await this.save();
+  }
+
+  /**
+   * Another school's league: a player change goes to the shared identity list for that school only. The Directory
+   * re-checks that the user is this league's commissioner and that the player belongs to this league's school.
+   */
+  private async forwardSchool(user: User, action: Record<string, unknown>): Promise<void> {
+    const s = this.require();
+    const r = await this.env.DO.fetch(new Request("https://internal/school-action", {
+      method: "POST", headers: DIR_HEADERS, body: JSON.stringify({ user, action, via: s.id }),
+    }));
+    const out = (await r.json().catch(() => ({}))) as { error?: string; athlete?: MasterAthlete; athletes?: MasterAthlete[] };
+    if (r.status === 403) throw new ForbiddenError(out.error ?? "Only this league's commissioner can change player info.");
+    if (!r.ok) throw new ActionError(out.error ?? "The player couldn't be saved. Nothing was changed.");
+    const rows = [...(out.athlete ? [out.athlete] : []), ...(out.athletes ?? [])];
+    if (rows.length) this.applyMaster(rows, true);
+    this.audit(user, `school.${String(action.type ?? "")}`, `${out.athlete?.name ?? `${rows.length} players`} (${this.scope().name})`);
+  }
+
+  /** Removes a player from this league's pool only (other leagues at the same school keep them). Owned players can't be removed. */
+  private excludeAthlete(user: User, athleteId: string): void {
+    const s = this.require();
+    const a = this.maybeAthlete(athleteId);
+    if (!a) throw new ActionError("Player not found.");
+    const owner = this.ownerOf(a.id);
+    if (owner) throw new ActionError(`${a.name} is on ${owner.teamName}. They have to be dropped before they can be removed from this league.`);
+    if (s.draft.picks.some((p) => p.athleteId === a.id)) throw new ActionError(`${a.name} was drafted in this league and can't be removed.`);
+    if (Object.keys(this.pts[a.id] ?? {}).length > 0) throw new ActionError(`${a.name} has scored points in this league and can't be removed.`);
+    s.athletes = s.athletes.filter((x) => x.id !== a.id);
+    delete s.waivers[a.id];
+    for (const t of s.teams) t.queue = t.queue.filter((id) => id !== a.id);
+    s.poolExcluded = [...new Set([...(s.poolExcluded ?? []), a.id])];
+    s.poolExcludedNames = { ...(s.poolExcludedNames ?? {}), [a.id]: a.name };
+    s.adp = resolveAdp(s.adpNames, s.athletes, s.adp);
+    this.audit(user, "athlete.exclude", `${a.name} removed from this league's player pool (other leagues unaffected)`);
+  }
+
+  /** Puts a removed player back into this league's pool from the shared identity list. */
+  private async restoreExcluded(user: User, athleteId: string): Promise<void> {
+    const s = this.require();
+    if (!(s.poolExcluded ?? []).includes(athleteId)) throw new ActionError("That player wasn't removed from this league.");
+    const r = await this.dirGet(`/athletes?since=0`);
+    if (!r.ok) throw new ActionError("The player list couldn't be loaded. Try again.");
+    const body = (await r.json()) as { athletes?: MasterAthlete[] };
+    const m = (body.athletes ?? []).find((x) => x.id === athleteId && !x.retired);
+    if (!m) throw new ActionError("That player is no longer in the shared list.");
+    s.poolExcluded = (s.poolExcluded ?? []).filter((id) => id !== athleteId);
+    if (s.poolExcludedNames) delete s.poolExcludedNames[athleteId];
+    this.applyMaster([m], true);
+    this.audit(user, "athlete.restore", `${m.name} added back to this league's player pool`);
   }
 
   /** Undoes the draft for this league only. Members, team names, settings, master players and other leagues are untouched. */
@@ -882,6 +954,17 @@ export class League extends DurableObject<Env> {
         return Response.json({ at: Date.now(), results: [...results, ...extra], pbs: this.scoring.pbs, library: extra.length });
       }
 
+      if (request.method === "GET" && url.pathname === "/school-whois") {
+        const s = this.require();
+        return Response.json({ commissionerId: s.commissionerId, leagueId: s.id, school: this.scope().name, cornwall: this.isHome() });
+      }
+
+      if (request.method === "POST" && url.pathname === "/integrity") {
+        // Directory only: counts for the before/after data check, plus a one-time full backup per tag.
+        const body = (await request.json()) as { tag?: string; backup?: boolean };
+        return Response.json(await this.integrity(String(body.tag ?? ""), body.backup === true));
+      }
+
       if (request.method === "GET" && url.pathname === "/global-whois") {
         const s = this.require();
         return Response.json({ commissionerId: s.commissionerId, leagueId: s.id, code: s.code });
@@ -934,9 +1017,10 @@ export class League extends DurableObject<Env> {
       }
 
       if (request.method === "POST" && url.pathname === "/init") {
-        const body = (await request.json()) as { id: string; name: string; code: string; user: User; teamName: string; settings?: Record<string, unknown> };
+        const body = (await request.json()) as { id: string; name: string; code: string; user: User; teamName: string; settings?: Record<string, unknown>; school?: string };
         if (this.state) return Response.json({ error: "exists" }, { status: 409 });
         this.state = this.createState(body);
+        if (this.state.school) await this.pullPool(0).catch((e: unknown) => console.warn("initial school pool sync failed", String(e)));
         this.scoring.heatRuleFromWeek = 1;
         await this.saveScoring();
         await this.save();
@@ -1043,6 +1127,23 @@ export class League extends DurableObject<Env> {
             return { ...p, linked: u.found, devices: u.subscriptions.length, subscribed: u.subscriptions.filter((x) => x.subscribed).length, problem: userProblem(u), subscriptions: u.subscriptions };
           }));
           return Response.json({ members, at: Date.now() });
+        }
+        if (op === "importRoster") {
+          if (this.isHome()) throw new ForbiddenError("Cornwall Central players are managed by the Main League commissioner.");
+          const st = this.require();
+          const r = await this.env.DO.fetch(new Request("https://internal/school-action", {
+            method: "POST", headers: DIR_HEADERS,
+            body: JSON.stringify({ user: body.user, action: { type: "importAthletes", rows: body.action.rows, mode: body.action.mode, requestId: body.action.requestId }, via: st.id }),
+          }));
+          const out = (await r.json().catch(() => ({}))) as { error?: string; athletes?: MasterAthlete[]; mode?: string; summary?: { added?: number }; repeated?: boolean };
+          if (r.status === 403) throw new ForbiddenError(out.error ?? "Only this league's commissioner can import players.");
+          if (!r.ok) throw new ActionError(out.error ?? "The import couldn't be read. Nothing was changed.");
+          if (out.mode === "commit" && !out.repeated) {
+            if (out.athletes?.length) this.applyMaster(out.athletes, true);
+            this.audit(body.user, "school.importAthletes", `Roster import: ${out.summary?.added ?? 0} added (${this.scope().name})`);
+            await this.save();
+          }
+          return Response.json({ ...out, athletes: undefined });
         }
         if (op === "snapshots") return Response.json({ snapshots: ((await this.ctx.storage.get<SnapMeta[]>("snaps")) ?? []).slice().reverse() });
         // Read-only labs on real results. Nothing here changes scoring, relays or the schedule.
@@ -1392,6 +1493,16 @@ export class League extends DurableObject<Env> {
     return !!this.global?.mainLeagueId && this.global.mainLeagueId === this.state?.id;
   }
 
+  /** This league's school scope (Cornwall Central for every league created before schools existed). */
+  private scope(): SchoolScope {
+    return schoolScope(this.state?.school);
+  }
+
+  /** Cornwall Central leagues share the Main League's meets and master-player edits; other schools run their own. */
+  private isHome(): boolean {
+    return this.scope().cornwall;
+  }
+
   /** Effective settings: global game rules + this league's own draft time, draft order and size. */
   private st(): Settings {
     const s = this.require();
@@ -1491,12 +1602,15 @@ export class League extends DurableObject<Env> {
     if (s.globalSince === undefined) {
       s.globalSince = now;
       if (s.phase !== "predraft" && !s.shape) s.shape = { regularWeeks: s.settings.regularWeeks, playoffTeams: s.settings.playoffTeams, consolation: s.settings.consolation };
-      this.tx("commish", null, this.isMain() ? "This is the Main League: its scoring, rules and meets now apply to every league" : "This league now uses the Main League's global scoring, rules and meets");
+      this.tx("commish", null, this.isMain() ? "This is the Main League: its scoring, rules and meets now apply to every league" : this.isHome() ? "This league now uses the Main League's global scoring, rules and meets" : `This league uses the universal scoring and rules. ${this.scope().name} meets are scheduled by this league's commissioner.`);
       changed = true;
     }
-    const globalIds = new Set(cfg.meets.map((m) => m.id));
+    // Other schools' leagues use the universal scoring and rules but schedule their own meets.
+    const home = this.isHome();
+    const sharedMeets = home ? cfg.meets : [];
+    const globalIds = new Set(sharedMeets.map((m) => m.id));
     // Old league-only meets keep their points but no longer run.
-    for (const m of s.meets) {
+    for (const m of home ? s.meets : []) {
       if (globalIds.has(m.id) || m.archived || m.testMeet) continue;
       if (m.scope === "global") continue;
       m.archived = true;
@@ -1520,7 +1634,7 @@ export class League extends DurableObject<Env> {
     }
     let rescore = !prev || prev.scoringVersion !== cfg.scoringVersion;
     const toSync: { m: Meet; final: boolean }[] = [];
-    for (const gm of cfg.meets) {
+    for (const gm of sharedMeets) {
       let m = s.meets.find((x) => x.id === gm.id);
       if (!m) {
         m = { ...this.blankMeet(), id: gm.id };
@@ -1672,7 +1786,11 @@ export class League extends DurableObject<Env> {
       waivers: s.waivers,
       claims: s.claims.filter((c) => c.teamId === tid).sort((a, b) => (a.status === "pending" ? 0 : 1) - (b.status === "pending" ? 0 : 1) || (a.rank ?? 999) - (b.rank ?? 999) || a.createdAt - b.createdAt),
       nextWaiverRun: this.nextWaiverRun(),
-      canEditPlayers: this.isMain() && userId === s.commissionerId,
+      canEditPlayers: (this.isMain() || !this.isHome()) && userId === s.commissionerId,
+      school: this.scope().name,
+      schoolIsDefault: this.isHome(),
+      runsOwnMeets: !this.isHome(),
+      excludedAthletes: commish && !this.isHome() ? (s.poolExcluded ?? []).slice(-200).map((id) => ({ id, name: s.poolExcludedNames?.[id] ?? id })) : [],
       waiverPriorityOrder: [...s.teams].sort((a, b) => a.waiverPriority - b.waiverPriority).map((t) => t.id),
       // Offers stay private to the two teams; a trade under review is shown to whoever votes on it (league review) or the commissioner.
       trades: s.trades.filter((t) => t.fromId === tid || t.toId === tid || t.status === "accepted" || t.status === "vetoed"
@@ -1775,9 +1893,11 @@ export class League extends DurableObject<Env> {
     return listed.concat([...s.athletes].sort((a, b) => a.rank - b.rank).map((a) => a.id).filter((id) => !seen.has(id)));
   }
 
-  private createState(body: { id: string; name: string; code: string; user: User; teamName: string; settings?: Record<string, unknown> }): State {
+  private createState(body: { id: string; name: string; code: string; user: User; teamName: string; settings?: Record<string, unknown>; school?: string }): State {
     const now = Date.now();
     const name = (body.name ?? "").trim().slice(0, 40) || "Track League";
+    // Cornwall Central (or blank) keeps the original setup exactly; any other school starts empty and syncs its own players.
+    const school = isCornwallName(body.school) ? "" : cleanSchoolName(body.school);
     const s: State = {
       schema: 2,
       id: body.id, name, code: body.code, commissionerId: body.user.id, createdAt: now,
@@ -1785,7 +1905,7 @@ export class League extends DurableObject<Env> {
       phase: "predraft",
       settings: defaultSettings(),
       teams: [this.blankTeam(body.user.id, body.user.name, body.teamName, 0)],
-      athletes: seedAthletes(),
+      athletes: school ? [] : seedAthletes(),
       draft: { order: [], picks: [], status: "pending", deadline: null, pausedRemaining: null, startedAt: null },
       week: 1, schedule: [], bracket: null, lineupSnapshots: {}, waivers: {}, claims: [], trades: [],
       transactions: [{ id: uid(), kind: "commish", teamId: body.user.id, text: `${body.user.name} created ${name}`, at: now, athleteIds: [] }],
@@ -1793,6 +1913,7 @@ export class League extends DurableObject<Env> {
       version: 0,
       meets: [], mappings: {}, unmatched: [], eventMap: {}, audit: [], adpNames: [...DEFAULT_ADP], adp: [],
       reads: {}, noteKeys: [], notedPoints: {},
+      ...(school ? { school, adpNames: [] } : {}),
     };
     s.adp = resolveAdp(s.adpNames, s.athletes);
     this.state = s;
@@ -3196,6 +3317,7 @@ export class League extends DurableObject<Env> {
   private analyze(m: Meet, rows: NormalizedMeetResult[]): Analysis {
     const s = this.require();
     const pool = this.pool();
+    const scope = this.scope();
     const rel = this.relevance(m.week);
     const out: Analysis = {
       rowIds: new Map(), matchType: new Map(), weak: new Map(), sourceAthletes: 0, matchedIds: new Set(), relevantIds: new Set(),
@@ -3227,14 +3349,14 @@ export class League extends DurableObject<Env> {
     // Same name twice among this meet's Cornwall athletes (different source ids) → never auto-matched.
     const nameCount = new Map<string, number>();
     for (const { src } of distinct.values()) {
-      if (!isPoolSchool(src.school, src.teamId, src.region)) continue;
+      if (!scope.isMine(src.school, src.teamId, src.region)) continue;
       out.poolAthletes++;
       const nk = `${src.gender}|${fullNorm(src)}`;
       nameCount.set(nk, (nameCount.get(nk) ?? 0) + 1);
     }
     const resolved = new Map<string, string | null>();
     for (const [k, { src, rows: srcRows }] of distinct) {
-      const hit = matchPoolAthlete(src, m.id, pool, s.mappings, this.links, nameCount.get(`${src.gender}|${fullNorm(src)}`) ?? 1, this.aliases);
+      const hit = matchPoolAthlete(src, m.id, pool, s.mappings, this.links, nameCount.get(`${src.gender}|${fullNorm(src)}`) ?? 1, this.aliases, scope);
       out.evidence.set(k, { src, match: hit });
       resolved.set(k, hit.athleteId);
       if (hit.athleteId) {
@@ -3267,8 +3389,8 @@ export class League extends DurableObject<Env> {
       }
       out.rowIds.set(r.id, []);
       // Relay legs not published: Cornwall relays go to review (never guessed); other schools' relays are ignored.
-      if (!isPoolSchool(r.school, r.teamId, r.region)) continue;
-      const candidates = pool.filter((a) => a.gender === r.gender && isPoolSchool(poolSchoolOf(a.school))).map((a) => a.id).slice(0, 60);
+      if (!scope.isMine(r.school, r.teamId, r.region)) continue;
+      const candidates = pool.filter((a) => a.gender === r.gender && scope.owns(a.school)).map((a) => a.id).slice(0, 60);
       if (candidates.length > 0) {
         out.weak.set(`r:${rk}`, { kind: "relay", src: { first: "", last: r.school, gender: r.gender, school: r.school, bib: null }, mapKeys: [rk], candidates, rows: [r] });
       }
@@ -3727,7 +3849,7 @@ export class League extends DurableObject<Env> {
     for (const r of this.buildLiveResults(probe, out, a, true).values()) {
       if (r && r.status === "OK" && !r.relay && r.provisional !== true) results.push({ ...r, historyOnly: true, meetId: null, best: "auto", week: 0 });
     }
-    const poolRows = out.rows.filter((r) => !r.relay && isPoolSchool(r.school, r.teamId, r.region)).length;
+    const poolRows = out.rows.filter((r) => !r.relay && this.scope().isMine(r.school, r.teamId, r.region)).length;
     return { results, rows: out.rows.length, events: new Set(out.rows.map((r) => r.sourceEventId)).size, poolRows, name: pm.name, date: pm.date, skipped };
   }
 
@@ -3912,7 +4034,7 @@ export class League extends DurableObject<Env> {
       };
       cur.rows++;
       if (r.completeness === "LIVE") cur.complete = false;
-      if (isPoolSchool(r.school, r.teamId, r.region)) cur.cornwall++;
+      if (this.scope().isMine(r.school, r.teamId, r.region)) cur.cornwall++;
       byEvent.set(r.sourceEventId, cur);
     }
     const recognized = out.rows.filter((r) => r.event).length;
@@ -3942,7 +4064,7 @@ export class League extends DurableObject<Env> {
     };
     for (const r of out.rows) {
       if (r.relay) {
-        if (!isPoolSchool(r.school, r.teamId, r.region)) continue;
+        if (!this.scope().isMine(r.school, r.teamId, r.region)) continue;
         const ids = a.rowIds.get(r.id) ?? [];
         evidence.push({
           kind: "relay",
@@ -3965,7 +4087,7 @@ export class League extends DurableObject<Env> {
       evidence.push({
         kind: "individual",
         source: { sourceId: ev.src.sourceId ?? null, name: `${ev.src.first} ${ev.src.last}`.trim(), school: ev.src.school, gender: ev.src.gender, grade: ev.src.grade ?? "", bib: ev.src.bib ?? "", teamId: ev.src.teamId ?? null },
-        master: mAth ? { id: mAth.id, name: mAth.name, school: poolSchoolOf(mAth.school), positions: mAth.positions } : null,
+        master: mAth ? { id: mAth.id, name: mAth.name, school: (mAth.school ?? "").trim() || this.scope().name, positions: mAth.positions } : null,
         match: { type: ev.match.type, confidence: ev.match.confidence, reason: ev.match.reason, candidates: ev.match.candidates.map((c) => ({ id: c, name: this.nameOf(c) })) },
         result: resultOf(r),
         scoring: scoringOf(r, id),
@@ -4213,6 +4335,9 @@ export class League extends DurableObject<Env> {
     if (type === "createMeet" && action.testMeet === true) {
       // Rehearsal meet in a throwaway test league: real AthleticLIVE data through the same importer and engine.
       if (this.isMain()) throw new ActionError("Rehearsal meets can't run in the Main League.");
+    } else if (GLOBAL_ACTIONS.has(type) && LOCAL_MEET_ACTIONS.has(type) && !this.isHome()) {
+      // Another school's league: its commissioner schedules and runs its own meets (same importer and engine).
+      this.assertCommish(user);
     } else if (GLOBAL_ACTIONS.has(type)) {
       const meetId = str("meetId");
       const local = meetId ? s.meets.find((m) => m.id === meetId && m.scope !== "global") : undefined;
@@ -4231,8 +4356,36 @@ export class League extends DurableObject<Env> {
     // Player info (name, school, positions, status, photo) lives in the master player database: Main League only.
     if (MASTER_ACTIONS.has(type)) {
       this.assertCommish(user);
+      if (!this.isHome() && type === "removeAthlete") { this.excludeAthlete(user, str("athleteId") || str("id")); return; }
+      if (!this.isHome()) { await this.forwardSchool(user, action); return; }
       if (!this.global) throw new ActionError("Global settings couldn't be loaded. Try again.");
       await this.forwardMaster(user, action);
+      return;
+    }
+    if (type === "retireAthlete" && !this.isHome()) {
+      this.assertCommish(user);
+      await this.forwardSchool(user, action);
+      return;
+    }
+    if (type === "stageBackupTest") {
+      // Throwaway test leagues only: the same backup code the stage data checks use, so a restore can be proven.
+      this.assertCommish(user);
+      if (!s.qaSandbox) throw new ForbiddenError("Only a throwaway test league can do this.");
+      const tag = `qa-${str("tag").replace(/[^a-z0-9]/g, "").slice(0, 12)}`;
+      const got = await this.integrity(tag, true);
+      const b = got.backup as { complete?: boolean; existed?: boolean } | undefined;
+      this.audit(user, "backup.test", `Stage backup ${tag}: ${b?.existed ? "already existed" : "written"}, ${b?.complete ? "complete" : "INCOMPLETE"}`);
+      return;
+    }
+    if (type === "restoreStageBackup") {
+      this.assertCommish(user);
+      if (action.confirm !== "RESTORE") throw new ActionError("Type RESTORE to confirm.");
+      await this.restoreStageBackup(user, str("tag"));
+      return;
+    }
+    if (type === "restoreAthlete") {
+      this.assertCommish(user);
+      await this.restoreExcluded(user, str("athleteId"));
       return;
     }
 
@@ -5724,6 +5877,86 @@ export class League extends DurableObject<Env> {
   // MARK: - Integrity: snapshots, breakdowns, reconcile, health
 
   /** Recoverable copy of this league's results + scoring, taken before any score-changing operation. */
+  /** Data-check counts for one league state (the same function counts the live state and its backup copy). */
+  private countsOf(st: State, results: number): Record<string, number | string> {
+    const members = new Set<string>();
+    for (const t of st.teams) { members.add(t.id); if (t.coManagerId) members.add(t.coManagerId); }
+    const rostered = st.teams.reduce((n, t) => n + Object.values(t.lineup ?? {}).filter(Boolean).length, 0);
+    return {
+      phase: st.phase, school: st.school ?? "", commissionerId: st.commissionerId,
+      commissionerIsMember: st.teams.some((t) => t.id === st.commissionerId) ? 1 : 0,
+      teams: st.teams.length, members: members.size, rostered, picks: st.draft.picks.length,
+      transactions: st.transactions.length, claims: st.claims.length, trades: st.trades.length,
+      matchups: st.schedule.length, finalMatchups: st.schedule.filter((m) => m.final).length,
+      athletes: st.athletes.length, excluded: (st.poolExcluded ?? []).length, meets: st.meets.length, results,
+    };
+  }
+
+  /**
+   * Before/after data check. With `backup`, the first call for a tag stores a full copy of this league (state, scoring
+   * and every result) under backup:stage:<tag>, then re-reads it and counts the copy, so the backup is proven complete.
+   */
+  private async integrity(tag: string, backup: boolean): Promise<Record<string, unknown>> {
+    const s = this.require();
+    const counts = this.countsOf(s, this.results.size);
+    if (!backup || !/^[a-z0-9-]{1,32}$/.test(tag)) return { leagueId: s.id, name: s.name, counts };
+    const key = `backup:stage:${tag}`;
+    let meta = await this.ctx.storage.get<{ at: number; chunks: number; results: number }>(`${key}:meta`);
+    const existed = !!meta;
+    if (!meta) {
+      const at = Date.now();
+      const results = [...this.results.values()];
+      const per = 50;
+      const chunks = Math.ceil(results.length / per);
+      for (let i = 0; i < chunks; i += 100) {
+        const puts: Record<string, unknown> = {};
+        for (let j = i; j < Math.min(chunks, i + 100); j++) puts[`${key}:r${j}`] = results.slice(j * per, (j + 1) * per);
+        await this.ctx.storage.put(puts);
+      }
+      await this.ctx.storage.put({ [`${key}:state`]: JSON.parse(JSON.stringify(s)) as State, [`${key}:scoring`]: this.scoring });
+      meta = { at, chunks, results: results.length };
+      await this.ctx.storage.put(`${key}:meta`, meta);
+    }
+    const copy = await this.ctx.storage.get<State>(`${key}:state`);
+    let copied = 0;
+    const keys = Array.from({ length: meta.chunks }, (_, j) => `${key}:r${j}`);
+    for (let i = 0; i < keys.length; i += 100) for (const v of (await this.ctx.storage.get<Result[]>(keys.slice(i, i + 100))).values()) copied += v.length;
+    return {
+      leagueId: s.id, name: s.name, counts,
+      backup: { key, at: meta.at, existed, counts: copy ? this.countsOf(copy, copied) : null, complete: !!copy && copied === meta.results },
+    };
+  }
+
+  /** Throwaway test leagues only: puts back a stage backup exactly (state, scoring, results). */
+  private async restoreStageBackup(user: User, tag: string): Promise<void> {
+    const s = this.require();
+    if (!s.qaSandbox) throw new ForbiddenError("Stage backups can only be restored here in a throwaway test league.");
+    const key = `backup:stage:${tag}`;
+    const meta = await this.ctx.storage.get<{ at: number; chunks: number; results: number }>(`${key}:meta`);
+    const copy = await this.ctx.storage.get<State>(`${key}:state`);
+    const sc = await this.ctx.storage.get<Scoring>(`${key}:scoring`);
+    if (!meta || !copy || !sc) throw new ActionError("That backup wasn't found.");
+    const keys = Array.from({ length: meta.chunks }, (_, j) => `${key}:r${j}`);
+    const results: Result[] = [];
+    for (let i = 0; i < keys.length; i += 100) for (const v of (await this.ctx.storage.get<Result[]>(keys.slice(i, i + 100))).values()) results.push(...v);
+    if (results.length !== meta.results) throw new ActionError("That backup is incomplete. Nothing was changed.");
+    const old = [...this.results.keys()];
+    for (let i = 0; i < old.length; i += 100) await this.ctx.storage.delete(old.slice(i, i + 100).map((id) => `res:${id}`));
+    this.results.clear();
+    for (let i = 0; i < results.length; i += 100) {
+      const puts: Record<string, Result> = {};
+      for (const r of results.slice(i, i + 100)) { puts[`res:${r.id}`] = r; this.results.set(r.id, r); }
+      await this.ctx.storage.put(puts);
+    }
+    this.scoring = sc;
+    await this.saveScoring();
+    const version = s.version;
+    this.state = { ...copy, version };
+    this.rowHashes.clear();
+    this.recompute();
+    this.audit(user, "backup.restore", `Restored the stage backup ${tag} from ${iso(meta.at)} (${results.length} results)`);
+  }
+
   private async snapshot(reason: string): Promise<number> {
     const at = Date.now();
     const results = [...this.results.values()];
@@ -6005,7 +6238,7 @@ export class League extends DurableObject<Env> {
     return {
       at: now, isMainLeague: this.isMain(),
       athletes: {
-        master: pool.length, cornwall: pool.filter((a) => isPoolSchool(poolSchoolOf(a.school))).length,
+        master: pool.length, cornwall: pool.filter((a) => this.scope().owns(a.school)).length,
         needsReview: open.filter((u) => u.kind === "athlete" || u.kind === "relay").length, unmatched: open.length,
         duplicateCandidates: dupes.length, duplicateExamples: dupes.slice(0, 12),
         sourceConflicts: [...this.links.values()].filter((l) => !!l.conflict).length, sourceLinks: this.links.size, aliases: this.aliases.size,

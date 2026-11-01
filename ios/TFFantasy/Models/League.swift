@@ -510,8 +510,20 @@ nonisolated struct LeagueState: Codable, Hashable, Sendable {
     let nextWeekAt: Double?
     /// athleteId → open "possible match" results waiting for commissioner review (the "?" indicator).
     let reviewFlags: [String: Int]?
+    /// The school whose athletes make up this league's player pool (existing leagues: Cornwall Central).
+    let school: String?
+    /// True for Cornwall Central (the original setup: shared Main League meets and player list).
+    let schoolIsDefault: Bool?
+    /// True when this league's commissioner schedules its own meets (every school other than Cornwall Central).
+    let runsOwnMeets: Bool?
+    /// Players the commissioner removed from this league's pool (commissioner only).
+    let excludedAthletes: [ExcludedAthlete]?
 
     var isMain: Bool { isMainLeague ?? false }
+    var schoolName: String { school ?? "Cornwall Central" }
+    var ownsMeets: Bool { runsOwnMeets ?? false }
+    /// The viewer can add and change meets here: the Main League commissioner (shared meets) or a school league's commissioner (its own meets).
+    var canManageMeets: Bool { canEditGlobalSettings || (ownsMeets && isCommissioner) }
     var canEditGlobalSettings: Bool { canEditGlobal ?? false }
 }
 
@@ -843,4 +855,49 @@ extension LeagueState {
             leagueName: name
         )
     }
+}
+
+nonisolated struct ExcludedAthlete: Codable, Hashable, Identifiable, Sendable {
+    let id: String
+    let name: String
+}
+
+nonisolated struct SchoolOption: Codable, Hashable, Identifiable, Sendable {
+    let name: String
+    let athletes: Int
+    var id: String { name }
+}
+
+nonisolated struct SchoolsBody: Codable, Sendable {
+    let schools: [SchoolOption]
+}
+
+// MARK: - Roster import
+
+nonisolated struct ImportRowResult: Codable, Hashable, Identifiable, Sendable {
+    let row: Int
+    let name: String
+    let gender: String
+    let position: String
+    let status: String
+    let reason: String?
+    let match: String?
+    var id: Int { row }
+}
+
+nonisolated struct ImportSummary: Codable, Hashable, Sendable {
+    let total: Int
+    let new: Int
+    let added: Int
+    let existing: Int
+    let possible: Int
+    let invalid: Int
+}
+
+nonisolated struct ImportResult: Codable, Hashable, Sendable {
+    let school: String?
+    let mode: String?
+    let rows: [ImportRowResult]
+    let summary: ImportSummary
+    let repeated: Bool?
 }

@@ -29,7 +29,7 @@ struct CommissionerView: View {
                     }
                     Section {
                         let live = league.liveMeetCount
-                        link(.meetCenter, "dot.radiowaves.left.and.right", "Meet Center", live > 0 ? "\(live) meet\(live == 1 ? "" : "s") LIVE — scoring automatically" : league.canEditGlobalSettings ? "Global meets for every league" : "Meets set by the Main League")
+                        link(.meetCenter, "dot.radiowaves.left.and.right", "Meet Center", live > 0 ? "\(live) meet\(live == 1 ? "" : "s") LIVE — scoring automatically" : league.ownsMeets ? "Schedule this league's meets" : league.canEditGlobalSettings ? "Global meets for every league" : "Meets set by the Main League")
                         let open = league.unmatchedCount ?? 0
                         link(.unmatched, "person.fill.questionmark", "Unmatched Results", open == 0 ? "Nothing to review" : "\(open) need your review", tint: open > 0 ? Theme.gold : Theme.green)
                         link(.integrity, "checkmark.shield.fill", "Scoring Integrity", "Health, Reconcile Scores, alert log, snapshots, versions", tint: Theme.green)
@@ -65,17 +65,19 @@ struct CommissionerView: View {
                             Text("This Week")
                         }
                     }
-                    Section("League") {
+                    Section {
                         link(.editSettings, "slider.horizontal.3", "League Settings", "Name, league size, draft time and order")
                         if league.phaseKind == .season || league.phaseKind == .complete {
                             link(.schedule, "calendar", "Season Schedule", "Every week's matchups, checks, and confirmed changes", tint: Theme.green)
                         }
                         link(.draft, "list.number", "Draft Controls", league.phaseKind == .predraft ? "Set order, start the draft" : "Draft results")
                         link(.manageTeams, "person.2", "Manage Teams", "Remove a team, change commissioner")
-                        link(.athletes, "figure.run", "Athlete Editor", (league.canEditPlayers ?? false) ? "\(league.athletes.count) athletes — master player database (every league)" : "Set by the Main League. View only", tint: (league.canEditPlayers ?? false) ? Theme.green : Theme.muted)
+                        link(.athletes, "figure.run", "Athlete Editor", league.ownsMeets ? "\(league.athletes.count) \(league.schoolName) athletes · import a roster" : (league.canEditPlayers ?? false) ? "\(league.athletes.count) athletes — master player database (every league)" : "Set by the Main League. View only", tint: (league.canEditPlayers ?? false) ? Theme.green : Theme.muted)
                         let flagged = (league.adpReview ?? []).filter(\.needsReview).count
                         link(.adpReview, "list.star", "Draft Rankings", flagged == 0 ? "ADP order for the draft room" : "\(flagged) names need review", tint: flagged > 0 ? Theme.gold : Theme.green)
                         link(.audit, "doc.text.magnifyingglass", "Audit Log", "Every manual scoring change")
+                    } header: {
+                        Text("League · \(league.schoolName)")
                     }
                     Section {
                         if league.phaseKind != .predraft || !league.draft.picks.isEmpty {

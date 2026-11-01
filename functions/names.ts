@@ -69,6 +69,47 @@ export function poolSchoolOf(school: string | undefined | null): string {
   return (school ?? "").trim() || POOL_SCHOOL;
 }
 
+/**
+ * A league's school scope. Existing leagues (blank school) are Cornwall Central and use exactly the original rules
+ * (team id 9730, canonical name, bare "Cornwall" at NY meets). Other schools match by canonical name only.
+ */
+export interface SchoolScope {
+  name: string;
+  cornwall: boolean;
+  /** A source result's school belongs to this league's school. */
+  isMine(school: string, teamId?: string | null, region?: string | null): boolean;
+  /** A master athlete's school (blank = Cornwall Central) belongs to this league's school. */
+  owns(athleteSchool: string | undefined | null): boolean;
+}
+
+export const CORNWALL_SCOPE: SchoolScope = {
+  name: POOL_SCHOOL,
+  cornwall: true,
+  isMine: (school, teamId, region) => isPoolSchool(school, teamId, region),
+  owns: (s) => sameSchool(poolSchoolOf(s), POOL_SCHOOL),
+};
+
+/** Clean a typed school name: trims and collapses spaces, max 80 chars. */
+export function cleanSchoolName(raw: unknown): string {
+  return String(raw ?? "").replace(/\s+/g, " ").trim().slice(0, 80);
+}
+
+export function isCornwallName(name: string | undefined | null): boolean {
+  const n = cleanSchoolName(name);
+  return !n || sameSchool(n, POOL_SCHOOL);
+}
+
+export function schoolScope(name: string | undefined | null): SchoolScope {
+  if (isCornwallName(name)) return CORNWALL_SCOPE;
+  const n = cleanSchoolName(name);
+  return {
+    name: n,
+    cornwall: false,
+    isMine: (school) => sameSchool(school, n),
+    owns: (s) => !!(s ?? "").trim() && sameSchool(s as string, n),
+  };
+}
+
 /** Schools match when one normalized name contains the other (min 4 chars). */
 export function schoolsMatch(a: string, b: string): boolean {
   const x = normSchool(a);

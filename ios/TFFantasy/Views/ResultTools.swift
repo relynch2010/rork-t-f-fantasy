@@ -809,6 +809,7 @@ struct AthleteEditorView: View {
     @State private var query: String = ""
     @State private var editing: Athlete?
     @State private var isAdding: Bool = false
+    @State private var isImporting: Bool = false
 
     var body: some View {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
@@ -833,8 +834,37 @@ struct AthleteEditorView: View {
                     }
                     .listRowBackground(Theme.surface)
                 }
+            } header: {
+                if let league = store.league, league.ownsMeets {
+                    Text("\(league.schoolName) players")
+                }
             } footer: {
-                Text("\(store.league?.athletes.count ?? 0) athletes. Only you can see this editor.")
+                if let league = store.league, league.ownsMeets {
+                    Text("\(league.athletes.count) athletes. Player names and positions are shared by every league at \(league.schoolName). Removing a player only affects this league.")
+                } else {
+                    Text("\(store.league?.athletes.count ?? 0) athletes. Only you can see this editor.")
+                }
+            }
+            if let league = store.league, league.ownsMeets, let removed = league.excludedAthletes, !removed.isEmpty, trimmed.isEmpty {
+                Section {
+                    ForEach(removed) { r in
+                        HStack {
+                            Text(r.name).foregroundStyle(Theme.muted)
+                            Spacer()
+                            Button("Add Back") {
+                                Task { await store.perform(["type": "restoreAthlete", "athleteId": r.id], success: "\(r.name) is back in this league") }
+                            }
+                            .font(.subheadline.weight(.semibold))
+                            .tint(Theme.green)
+                            .disabled(store.isBusy)
+                        }
+                        .listRowBackground(Theme.surface)
+                    }
+                } header: {
+                    Text("Removed from this league")
+                } footer: {
+                    Text("Other leagues at \(league.schoolName) still have these players.")
+                }
             }
         }
         .screenBackground()
@@ -843,9 +873,20 @@ struct AthleteEditorView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button { isAdding = true } label: { Image(systemName: "plus") }
-                    .accessibilityLabel("Add athlete")
+                if store.league?.ownsMeets == true {
+                    Menu {
+                        Button("Add One Player", systemImage: "person.badge.plus") { isAdding = true }
+                        Button("Import Roster", systemImage: "list.bullet.clipboard") { isImporting = true }
+                    } label: { Image(systemName: "plus") }
+                    .accessibilityLabel("Add athletes")
+                } else {
+                    Button { isAdding = true } label: { Image(systemName: "plus") }
+                        .accessibilityLabel("Add athlete")
+                }
             }
+        }
+        .sheet(isPresented: $isImporting) {
+            RosterImportView().environment(store).preferredColorScheme(.dark)
         }
         .sheet(item: $editing) { a in
             AthleteFormSheet(athlete: a).environment(store).preferredColorScheme(.dark)
@@ -877,7 +918,11 @@ struct AthleteFormSheet: View {
             Form {
                 Section {
                     TextField("Full name", text: $name)
-                    TextField("School (used for live result matching)", text: $school)
+                    if let league = store.league, league.ownsMeets {
+                        LabeledContent("School", value: league.schoolName)
+                    } else {
+                        TextField("School (used for live result matching)", text: $school)
+                    }
                     Picker("Gender", selection: $gender) {
                         Text("Boys").tag(Gender.B)
                         Text("Girls").tag(Gender.G)
@@ -914,7 +959,11 @@ struct AthleteFormSheet: View {
                     Task { if await store.perform(["type": "removeAthlete", "athleteId": a.id], success: "\(a.name) removed") { dismiss() } }
                 }
             } message: {
-                Text("They'll be dropped from any roster and pending trades.")
+                if store.league?.ownsMeets == true {
+                    Text("They're removed from this league's player pool only. Players on a roster, already drafted or with points can't be removed.")
+                } else {
+                    Text("They'll be dropped from any roster and pending trades.")
+                }
             }
             .onAppear {
                 guard let a = athlete else { return }
@@ -929,7 +978,8 @@ struct AthleteFormSheet: View {
 
     private func save() {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
-        var body: [String: Any] = ["name": trimmed, "school": school.trimmingCharacters(in: .whitespaces), "gender": gender.rawValue, "position": pos]
+        let schoolValue = store.league?.ownsMeets == true ? (store.league?.schoolName ?? "") : school.trimmingCharacters(in: .whitespaces)
+        var body: [String: Any] = ["name": trimmed, "school": schoolValue, "gender": gender.rawValue, "position": pos]
         if let a = athlete {
             body["type"] = "editAthlete"
             body["athleteId"] = a.id

@@ -17,15 +17,19 @@ struct MeetCenterView: View {
     var body: some View {
         List {
             if let league = store.league {
-                if !league.canEditGlobalSettings {
+                if league.ownsMeets {
+                    Section { MainLeagueBanner(text: "\(league.schoolName) leagues schedule their own meets. Each meet you add here belongs to this league only.") }
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets())
+                } else if !league.canEditGlobalSettings {
                     Section { MainLeagueBanner(text: "Meets are set by the Main League and shared with every league. Your league scores them against its own rosters and lineups.") }
                         .listRowBackground(Color.clear)
                         .listRowInsets(EdgeInsets())
                 }
                 Section {
-                    if league.canEditGlobalSettings {
+                    if league.canManageMeets {
                         NavigationLink(value: LeagueRoute.meetEditor(nil)) {
-                            ToolRow(icon: "plus.circle.fill", title: "Add Meet", subtitle: "Global meet for every league: week and live result source", tint: Theme.green)
+                            ToolRow(icon: "plus.circle.fill", title: "Add Meet", subtitle: league.ownsMeets ? "A meet for this league: week and live result source" : "Global meet for every league: week and live result source", tint: Theme.green)
                         }
                         .listRowBackground(Theme.surface)
                     }
@@ -54,7 +58,7 @@ struct MeetCenterView: View {
                         }
                     }
                 } footer: {
-                    Text(league.canEditGlobalSettings ? "Set up each meet once for the whole game. The server reads results once, then every league matches its own rostered athletes and updates its matchups automatically." : "You can still review unmatched athletes for your league.")
+                    Text(league.ownsMeets && league.isCommissioner ? "Add each meet with its live result link. The server reads the results and scores this league's matchups automatically." : league.canEditGlobalSettings ? "Set up each meet once for the whole game. The server reads results once, then every league matches its own rostered athletes and updates its matchups automatically." : "You can still review unmatched athletes for your league.")
                 }
 
                 let meets = league.allMeets.sorted { ($0.week, $0.createdAt) > ($1.week, $1.createdAt) }

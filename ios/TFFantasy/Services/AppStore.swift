@@ -328,12 +328,12 @@ final class AppStore {
         }
     }
 
-    func createLeague(name: String, teamName: String, settings: [String: Any]) async -> Bool {
+    func createLeague(name: String, teamName: String, school: String = "", settings: [String: Any]) async -> Bool {
         guard user != nil else { return false }
         isBusy = true
         defer { isBusy = false }
         do {
-            let state = try await api.createLeague(name: name, teamName: teamName, settings: settings)
+            let state = try await api.createLeague(name: name, teamName: teamName, school: school, settings: settings)
             apply(state)
             activate(state.id)
             await refreshLeagues()
@@ -343,6 +343,11 @@ final class AppStore {
             show(error)
             return false
         }
+    }
+
+    /// Schools with players on file, for the create-league picker. Empty if it can't load (typing a school still works).
+    func schools() async -> [SchoolOption] {
+        (try? await api.schools()) ?? []
     }
 
     func joinLeague(code: String, teamName: String) async -> Bool {
