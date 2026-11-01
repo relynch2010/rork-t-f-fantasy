@@ -1,0 +1,115 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* TrackDraft dark palette (matches the iOS app). All colors HSL. */
+@layer base {
+  :root {
+    --background: 200 20% 7.8%;
+    --foreground: 150 20% 94%;
+    --card: 200 17% 12.7%;
+    --card-foreground: 150 20% 94%;
+    --popover: 200 17% 12.7%;
+    --popover-foreground: 150 20% 94%;
+    --primary: 145 72% 45%;
+    --primary-foreground: 150 60% 6%;
+    --secondary: 200 16% 17%;
+    --secondary-foreground: 150 20% 94%;
+    --muted: 200 16% 17%;
+    --muted-foreground: 205 9% 64%;
+    --accent: 200 16% 20%;
+    --accent-foreground: 150 20% 94%;
+    --destructive: 358 100% 68%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 200 14% 20%;
+    --input: 200 14% 22%;
+    --ring: 145 72% 45%;
+    --radius: 0.9rem;
+
+    --td-green: 145 72% 45%;
+    --td-green-bright: 145 70% 55%;
+    --td-green-deep: 147 61% 14%;
+    --td-gold: 45 87% 61%;
+    --td-waiver: 50 100% 52%;
+    --td-red: 358 100% 68%;
+    --td-surface: 200 17% 12.7%;
+    --td-surface2: 200 16% 17%;
+    --td-raised: 200 15% 20.4%;
+    --td-faint: 205 9% 41%;
+    --td-spr: 210 100% 69%;
+    --td-dis: 167 62% 57%;
+    --td-fld: 26 100% 66%;
+    --td-flex: 54 80% 60%;
+
+    --sidebar-background: 200 20% 7.8%;
+    --sidebar-foreground: 150 20% 94%;
+    --sidebar-primary: 145 72% 45%;
+    --sidebar-primary-foreground: 150 60% 6%;
+    --sidebar-accent: 200 16% 17%;
+    --sidebar-accent-foreground: 150 20% 94%;
+    --sidebar-border: 200 14% 20%;
+    --sidebar-ring: 145 72% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "Inter", system-ui, sans-serif;
+    background-image:
+      radial-gradient(1200px 500px at 15% -10%, hsl(var(--td-green) / 0.12), transparent 60%),
+      radial-gradient(900px 400px at 100% 0%, hsl(var(--td-gold) / 0.05), transparent 60%);
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: "Barlow Condensed", "Inter", sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+  }
+  .panel {
+    @apply rounded-2xl border border-border bg-td-surface/90 backdrop-blur-sm;
+  }
+  .eyebrow {
+    @apply text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted-foreground;
+  }
+  .num {
+    font-family: "Barlow Condensed", "Inter", sans-serif;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .lane-lines {
+    background-image: repeating-linear-gradient(90deg, transparent 0 46px, hsl(var(--td-green) / 0.07) 46px 48px);
+  }
+}
+
+@keyframes td-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes td-draw {
+  from { width: 0; }
+  to { width: 150px; }
+}
+@keyframes td-glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@keyframes td-pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--td-red) / 0.6); }
+  50% { box-shadow: 0 0 0 6px hsl(var(--td-red) / 0); }
+}
+.td-rise { animation: td-rise 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+.td-draw { animation: td-draw 0.6s ease-out 0.35s both; }
+.td-glow { animation: td-glow 1.6s ease-in-out infinite; }
+.td-live-dot { animation: td-pulse-dot 1.4s ease-in-out infinite; }

@@ -1,0 +1,118 @@
+{
+ "start": {
+  "ok": true,
+  "meets": 0
+ },
+ "alivePreview": {
+  "ok": true,
+  "message": "Coach Saint Invitational (2025-12-12): 72 marks for 56 Cornwall Central athletes. Nothing saved yet.",
+  "rows": 2179,
+  "events": 50,
+  "results": 72,
+  "athletes": 56,
+  "skipped": 0,
+  "exists": false
+ },
+ "aliveBadLink": {
+  "error": "No AthleticLIVE meet number found (HTTP 404). Paste an AthleticLIVE meet link (\u2026/meets/12345), or paste the results text instead.",
+  "_status": 400
+ },
+ "aliveAdd": {
+  "ok": true,
+  "message": "Added Coach Saint Invitational (2025-12-12): 72 marks. This test league's projections updated. Real scoring is unchanged."
+ },
+ "aliveAddDoubleTap": {
+  "ok": true,
+  "message": "Already done (duplicate tap ignored).",
+  "duplicate": true
+ },
+ "aliveAddAgain": {
+  "error": "Coach Saint Invitational is already in the list.",
+  "_status": 400
+ },
+ "pastedSourceMarks": 69,
+ "textPreviewHytek": {
+  "ok": true,
+  "message": "QA Pasted Invitational (2026-01-04): 69 marks for 55 Cornwall Central athletes. Nothing saved yet.",
+  "rows": 69,
+  "events": 13,
+  "results": 69,
+  "athletes": 55,
+  "skipped": 0,
+  "exists": false
+ },
+ "textPreviewTable": {
+  "ok": true,
+  "message": "QA Pasted Table (2026-01-05): 69 marks for 55 Cornwall Central athletes. Nothing saved yet.",
+  "rows": 69,
+  "events": 13,
+  "results": 69,
+  "athletes": 55,
+  "skipped": 0,
+  "exists": false
+ },
+ "textNoDate": {
+  "error": "Give the pasted meet a date (YYYY-MM-DD).",
+  "_status": 400
+ },
+ "textFuture": {
+  "error": "Projection meets must already have happened.",
+  "_status": 400
+ },
+ "textNoMatch": {
+  "error": "QA No Match: no Cornwall Central athletes were matched, so it wasn't added.",
+  "_status": 400
+ },
+ "textAdd": {
+  "ok": true,
+  "message": "Added QA Pasted Invitational (2026-01-04): 69 marks. This test league's projections updated. Real scoring is unchanged."
+ },
+ "listAfterAdd": [
+  {
+   "id": "tx-17npp63siq",
+   "kind": "TEXT",
+   "name": "QA Pasted Invitational",
+   "date": "2026-01-04",
+   "stat": {
+    "at": 1793314295488,
+    "results": 69,
+    "athletes": 55,
+    "error": null
+   }
+  },
+  {
+   "id": "al-54930",
+   "kind": "ATHLETICLIVE",
+   "name": "Coach Saint Invitational",
+   "date": "2025-12-12",
+   "stat": {
+    "at": 1793314291356,
+    "results": 72,
+    "athletes": 56,
+    "error": null
+   }
+  }
+ ],
+ "rebuild": {
+  "ok": true,
+  "message": "Rebuilt every projection meet. This test league's projections updated. Real scoring is unchanged."
+ },
+ "rebuildDoubleTap": {
+  "ok": true,
+  "message": "Already done (duplicate tap ignored).",
+  "duplicate": true
+ },
+ "remove": {
+  "ok": true,
+  "message": "Removed QA Pasted Invitational (2026-01-04). This test league's projections updated. Real scoring is unchanged."
+ },
+ "removeMissing": {
+  "error": "That meet isn't in the list.",
+  "_status": 400
+ },
+ "projectionsChangedAfterAdd": 14,
+ "projectionsChangedAfterRebuild": 0,
+ "projectionsChangedAfterRemove": 14,
+ "realScoringUnchanged": true,
+ "realLines": 1251
+}

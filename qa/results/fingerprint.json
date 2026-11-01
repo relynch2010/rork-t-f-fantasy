@@ -1,0 +1,48 @@
+{
+ "ok": true,
+ "hash": "rdzn8ygr5dq6",
+ "weeks": [
+  {
+   "week": 1,
+   "hash": "xh3q251v826w5",
+   "lines": 187,
+   "points": 598
+  },
+  {
+   "week": 2,
+   "hash": "16j25yi1wgysjg",
+   "lines": 285,
+   "points": 836.5
+  },
+  {
+   "week": 3,
+   "hash": "gvquz1dirsc9",
+   "lines": 208,
+   "points": 604.5
+  },
+  {
+   "week": 4,
+   "hash": "hm0xmj1mybq89",
+   "lines": 208,
+   "points": 517
+  },
+  {
+   "week": 5,
+   "hash": "1pn74bfinaatf",
+   "lines": 297,
+   "points": 858.5
+  },
+  {
+   "week": 6,
+   "hash": "1wru5ky15uviby",
+   "lines": 277,
+   "points": 653.5
+  },
+  {
+   "week": 7,
+   "hash": "120pbay1e9fsxz",
+   "lines": 151,
+   "points": 464
+  }
+ ]
+}

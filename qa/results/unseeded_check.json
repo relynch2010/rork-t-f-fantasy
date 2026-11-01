@@ -1,0 +1,80 @@
+{
+ "preview": {
+  "athletesAffected": null,
+  "unchanged": null,
+  "error": null,
+  "_status": null
+ },
+ "publish": {
+  "ok": null,
+  "message": null,
+  "error": null,
+  "_status": null
+ },
+ "week8Lines": 225,
+ "unseededLines": 16,
+ "samples": [
+  {
+   "athlete": "quetzijuarez",
+   "code": "pct",
+   "category": "PERCENTILE",
+   "label": "Top 30% of 38 unseeded",
+   "points": 2,
+   "basis": "Unseeded section \u00b7 Field size 38 \u00b7 valid competitors 38 \u00b7 place 9 \u00b7 9/38 = 23.68% \u00b7 bracket top 30%",
+   "ver": "TEST-LEAGUE sandbox scoring v1",
+   "season": 2026
+  },
+  {
+   "athlete": "bencabrera",
+   "code": "pct",
+   "category": "PERCENTILE",
+   "label": "Top 5% of 63 unseeded",
+   "points": 6,
+   "basis": "Unseeded section \u00b7 Field size 63 \u00b7 valid competitors 63 \u00b7 place 3 \u00b7 3/63 = 4.76% \u00b7 bracket top 5%",
+   "ver": "TEST-LEAGUE sandbox scoring v1",
+   "season": 2026
+  },
+  {
+   "athlete": "finniandill",
+   "code": "pct",
+   "category": "PERCENTILE",
+   "label": "Top 30% of 89 unseeded",
+   "points": 2,
+   "basis": "Unseeded section \u00b7 Field size 89 \u00b7 valid competitors 89 \u00b7 place 26 \u00b7 26/89 = 29.21% \u00b7 bracket top 30%",
+   "ver": "TEST-LEAGUE sandbox scoring v1",
+   "season": 2026
+  },
+  {
+   "athlete": "christiancibirka",
+   "code": "pct",
+   "category": "PERCENTILE",
+   "label": "Top 20% of 89 unseeded",
+   "points": 3,
+   "basis": "Unseeded section \u00b7 Field size 89 \u00b7 valid competitors 89 \u00b7 place 11 \u00b7 11/89 = 12.36% \u00b7 bracket top 20%",
+   "ver": "TEST-LEAGUE sandbox scoring v1",
+   "season": 2026
+  }
+ ],
+ "mainLeagueUnseeded": [
+  {
+   "pct": 0.05,
+   "pts": 0
+  },
+  {
+   "pct": 0.1,
+   "pts": 0
+  },
+  {
+   "pct": 0.2,
+   "pts": 0
+  },
+  {
+   "pct": 0.3,
+   "pts": 0
+  },
+  {
+   "pct": 0.4,
+   "pts": 0
+  }
+ ]
+}

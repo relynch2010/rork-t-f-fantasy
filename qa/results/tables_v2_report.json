@@ -1,0 +1,240 @@
+{
+ "changedAthletes": 33,
+ "athletes": [
+  {
+   "athlete": "Luke Potter",
+   "id": "lukepotter",
+   "before": 199,
+   "after": 225,
+   "delta": 26
+  },
+  {
+   "athlete": "Beya Salerno",
+   "id": "beyasalerno",
+   "before": 157.5,
+   "after": 176,
+   "delta": 18.5
+  },
+  {
+   "athlete": "Jasmine Urena",
+   "id": "jasmineurena",
+   "before": 140.5,
+   "after": 154.5,
+   "delta": 14.0
+  },
+  {
+   "athlete": "Kassandra Enos",
+   "id": "kassandraenos",
+   "before": 124.0,
+   "after": 135.0,
+   "delta": 11.0
+  },
+  {
+   "athlete": "Olivia Cibirka",
+   "id": "oliviacibirka",
+   "before": 157.0,
+   "after": 167.0,
+   "delta": 10.0
+  },
+  {
+   "athlete": "Owen Vallinino",
+   "id": "owenvallinino",
+   "before": 77.5,
+   "after": 87,
+   "delta": 9.5
+  },
+  {
+   "athlete": "Colin Lewis",
+   "id": "colinlewis",
+   "before": 104.5,
+   "after": 113.5,
+   "delta": 9.0
+  },
+  {
+   "athlete": "Ilunga Salerno",
+   "id": "ilungasalerno",
+   "before": 192,
+   "after": 201.0,
+   "delta": 9.0
+  },
+  {
+   "athlete": "Justen Tolbert",
+   "id": "justentolbert",
+   "before": 105.0,
+   "after": 114.0,
+   "delta": 9.0
+  },
+  {
+   "athlete": "Sky Appleton",
+   "id": "skyappleton",
+   "before": 103.5,
+   "after": 112.0,
+   "delta": 8.5
+  },
+  {
+   "athlete": "Madeline Larkin",
+   "id": "madelinelarkin",
+   "before": 131,
+   "after": 138.0,
+   "delta": 7.0
+  },
+  {
+   "athlete": "Noemi Goitia",
+   "id": "noemigoitia",
+   "before": 116.0,
+   "after": 122.5,
+   "delta": 6.5
+  },
+  {
+   "athlete": "Lydia Semo",
+   "id": "lydiasemo",
+   "before": 115.0,
+   "after": 120.0,
+   "delta": 5.0
+  },
+  {
+   "athlete": "Cecelia Cruz",
+   "id": "ceciliacruz",
+   "before": 35.5,
+   "after": 38.5,
+   "delta": 3.0
+  },
+  {
+   "athlete": "Donovan Mansano",
+   "id": "donovanmansano",
+   "before": 24.0,
+   "after": 27.0,
+   "delta": 3.0
+  },
+  {
+   "athlete": "Quetzi Juarez",
+   "id": "quetzijuarez",
+   "before": 68.5,
+   "after": 71.5,
+   "delta": 3.0
+  },
+  {
+   "athlete": "Aiden Jean-Marie",
+   "id": "aidenjeanmarie",
+   "before": 55.5,
+   "after": 58.0,
+   "delta": 2.5
+  },
+  {
+   "athlete": "Daniel Cibirka",
+   "id": "danielcibirka",
+   "before": 96.0,
+   "after": 98.5,
+   "delta": 2.5
+  },
+  {
+   "athlete": "Kaitlyn Hartwig",
+   "id": "kaitlynhartwig",
+   "before": 20.0,
+   "after": 22.5,
+   "delta": 2.5
+  },
+  {
+   "athlete": "Owen Wissner",
+   "id": "owenwissner",
+   "before": 62.5,
+   "after": 64.5,
+   "delta": 2.0
+  },
+  {
+   "athlete": "Ava Liebert",
+   "id": "avaliebert",
+   "before": 47.0,
+   "after": 45.5,
+   "delta": -1.5
+  },
+  {
+   "athlete": "Ben Bellamy",
+   "id": "benjaminbellamy",
+   "before": 42,
+   "after": 43,
+   "delta": 1
+  },
+  {
+   "athlete": "Ethan Urena-Barboza",
+   "id": "ethanurenabarbosa",
+   "before": 28.5,
+   "after": 29.5,
+   "delta": 1.0
+  },
+  {
+   "athlete": "Jack Ferrara",
+   "id": "jackferrara",
+   "before": 42,
+   "after": 43.0,
+   "delta": 1.0
+  },
+  {
+   "athlete": "Mason Cotton",
+   "id": "masoncotton",
+   "before": 30.0,
+   "after": 31.0,
+   "delta": 1.0
+  },
+  {
+   "athlete": "Amelia Hoyt",
+   "id": "ameliahoyt",
+   "before": 47.5,
+   "after": 47,
+   "delta": -0.5
+  },
+  {
+   "athlete": "Ben Cabrera",
+   "id": "bencabrera",
+   "before": 37.0,
+   "after": 36.5,
+   "delta": -0.5
+  },
+  {
+   "athlete": "Christian Cibirka",
+   "id": "christiancibirka",
+   "before": 34.0,
+   "after": 33.5,
+   "delta": -0.5
+  },
+  {
+   "athlete": "Daniel Zvonick",
+   "id": "danielzvonik",
+   "before": 31.5,
+   "after": 32.0,
+   "delta": 0.5
+  },
+  {
+   "athlete": "Hudson Alarcon",
+   "id": "hudsonalarcon",
+   "before": 27.5,
+   "after": 27,
+   "delta": -0.5
+  },
+  {
+   "athlete": "James McGuirk",
+   "id": "jamesmcguirk",
+   "before": 53,
+   "after": 53.5,
+   "delta": 0.5
+  },
+  {
+   "athlete": "Kalliope Enos",
+   "id": "kalliopeenos",
+   "before": 46.5,
+   "after": 46,
+   "delta": -0.5
+  },
+  {
+   "athlete": "Karlee King",
+   "id": "karleeking",
+   "before": 23.5,
+   "after": 23,
+   "delta": -0.5
+  }
+ ],
+ "matchupFlips": [],
+ "unseededLines": [],
+ "totalBefore": 3239.5,
+ "totalAfter": 3401.5
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://rork.com/schema/rork.json",
+  "apps": [
+    {
+      "name": "T&F Fantasy",
+      "path": "ios",
+      "framework": "swift",
+      "settings": {
+        "displayName": "T&F Fantasy",
+        "iosBundleId": "fantasytrackapp.rork"
+      }
+    },
+    {
+      "name": "Functions",
+      "path": "functions",
+      "framework": "cloudflare"
+    },
+    {
+      "name": "Backend",
+      "path": "backend",
+      "framework": "supabase"
+    },
+    {
+      "name": "T&F Fantasy Web",
+      "path": "web",
+      "framework": "web"
+    }
+  ]
+}

@@ -1,0 +1,951 @@
+{
+ "rankBefore": {
+  "madisonriccardi": [
+   69.13,
+   "projected",
+   111.07
+  ],
+  "ilungasalerno": [
+   40.87,
+   "projected",
+   67.11
+  ],
+  "owenvallinino": [
+   37.03,
+   "projected",
+   58.71
+  ],
+  "madelinelarkin": [
+   30.82,
+   "projected",
+   69.35
+  ],
+  "jasmineurena": [
+   22.7,
+   "projected",
+   42.25
+  ],
+  "lukepotter": [
+   21.14,
+   "projected",
+   53.44
+  ],
+  "beyasalerno": [
+   17.96,
+   "projected",
+   34.29
+  ],
+  "skyappleton": [
+   17.79,
+   "projected",
+   37.37
+  ],
+  "oliviacibirka": [
+   15.07,
+   "projected",
+   35.79
+  ],
+  "jameschowanski": [
+   14.67,
+   "projected",
+   26.32
+  ],
+  "quetzijuarez": [
+   14.42,
+   "projected",
+   26.42
+  ],
+  "owenwissner": [
+   13.69,
+   "projected",
+   36.29
+  ],
+  "benjaminbellamy": [
+   13.49,
+   "projected",
+   25.35
+  ],
+  "justentolbert": [
+   12.02,
+   "projected",
+   23.88
+  ],
+  "noemigoitia": [
+   11.31,
+   "projected",
+   26.92
+  ],
+  "danielcibirka": [
+   11.31,
+   "projected",
+   26.92
+  ],
+  "kassandraenos": [
+   10.42,
+   "projected",
+   29.06
+  ],
+  "kaieljohnson": [
+   10.31,
+   "projected",
+   19.95
+  ],
+  "lydiasemo": [
+   10.21,
+   "projected",
+   24.2
+  ],
+  "avaliebert": [
+   9.91,
+   "projected",
+   27.25
+  ],
+  "bobbylynch": [
+   9.54,
+   "projected",
+   20.47
+  ],
+  "danielzvonik": [
+   9.48,
+   "projected",
+   31.13
+  ],
+  "michaelmccafferty": [
+   8.94,
+   "projected",
+   22.2
+  ],
+  "colinlewis": [
+   7.69,
+   "projected",
+   20.58
+  ],
+  "hudsonalarcon": [
+   7.48,
+   "projected",
+   19.04
+  ],
+  "benhuang": [
+   7.42,
+   "projected",
+   17.14
+  ],
+  "jeffdong": [
+   7.35,
+   "projected",
+   16.76
+  ],
+  "camilataverez": [
+   7.31,
+   "projected",
+   15.82
+  ],
+  "ceciliacruz": [
+   6.99,
+   "projected",
+   16.36
+  ],
+  "clairecreech": [
+   6.92,
+   "projected",
+   15.82
+  ],
+  "ameliahoyt": [
+   6.91,
+   "projected",
+   17.61
+  ],
+  "tylerhenriquez": [
+   6.77,
+   "projected",
+   14.93
+  ],
+  "rosiekelly": [
+   6.56,
+   "projected",
+   13.76
+  ],
+  "bencabrera": [
+   6.41,
+   "projected",
+   21.66
+  ],
+  "liahmarcella": [
+   6.4,
+   "projected",
+   14.45
+  ],
+  "ethanlopez": [
+   6.35,
+   "projected",
+   13.93
+  ],
+  "lilacabrera": [
+   6.34,
+   "projected",
+   16.87
+  ],
+  "alinascheiman": [
+   6.26,
+   "projected",
+   13.38
+  ],
+  "kalliopeenos": [
+   6.23,
+   "projected",
+   15.35
+  ],
+  "graceotto": [
+   5.78,
+   "projected",
+   14.16
+  ],
+  "maciestermer": [
+   5.33,
+   "projected",
+   12.84
+  ],
+  "bradenwork": [
+   5.28,
+   "projected",
+   11.52
+  ],
+  "matthewlee": [
+   5.28,
+   "projected",
+   11.52
+  ],
+  "callielaudato": [
+   5.13,
+   "projected",
+   12.6
+  ],
+  "emilyrostanazo": [
+   5.05,
+   "projected",
+   12.28
+  ],
+  "sheafern": [
+   5.02,
+   "projected",
+   12.27
+  ],
+  "karleeking": [
+   4.66,
+   "projected",
+   12.05
+  ],
+  "kaitlynhartwig": [
+   4.59,
+   "projected",
+   11.99
+  ],
+  "patriciaking": [
+   4.54,
+   "projected",
+   11.8
+  ],
+  "ethanurenabarbosa": [
+   4.37,
+   "projected",
+   12.16
+  ],
+  "faithcaoili": [
+   4.37,
+   "projected",
+   11.46
+  ],
+  "finniandill": [
+   4.31,
+   "projected",
+   12.64
+  ],
+  "masoncotton": [
+   4.12,
+   "projected",
+   11.33
+  ],
+  "christiancibirka": [
+   3.97,
+   "projected",
+   14.85
+  ],
+  "connorscully": [
+   3.95,
+   "projected",
+   10.89
+  ],
+  "emmadoyle": [
+   3.84,
+   "projected",
+   9.96
+  ],
+  "jamesmcguirk": [
+   3.65,
+   "projected",
+   12.27
+  ],
+  "albertkirienko": [
+   3.65,
+   "projected",
+   9.81
+  ],
+  "jackferrara": [
+   3.65,
+   "projected",
+   9.81
+  ],
+  "marisabarnsby": [
+   3.65,
+   "projected",
+   10.39
+  ],
+  "jasonporter": [
+   3.64,
+   "projected",
+   9.65
+  ],
+  "brandonlee": [
+   3.36,
+   "projected",
+   8.79
+  ],
+  "danieldratch": [
+   3.28,
+   "projected",
+   8.37
+  ],
+  "justinalexis": [
+   3.28,
+   "projected",
+   8.37
+  ],
+  "violetpruitt": [
+   3.28,
+   "projected",
+   8.37
+  ],
+  "aidenschultze": [
+   3.28,
+   "projected",
+   8.37
+  ],
+  "diyarthabit": [
+   3.28,
+   "projected",
+   8.37
+  ],
+  "jackbaxter": [
+   3.28,
+   "projected",
+   8.37
+  ],
+  "kingstonallen": [
+   3.28,
+   "projected",
+   8.37
+  ],
+  "noahpadilla": [
+   3.28,
+   "projected",
+   8.37
+  ],
+  "donovanmansano": [
+   3.27,
+   "projected",
+   9.17
+  ],
+  "braydenforsstrom": [
+   3.2,
+   "projected",
+   8.84
+  ],
+  "catherinelarkin": [
+   3.14,
+   "projected",
+   9.5
+  ],
+  "samlouis": [
+   2.81,
+   "projected",
+   7.63
+  ],
+  "braydenpeck": [
+   2.77,
+   "projected",
+   8.1
+  ],
+  "desmondhunt": [
+   2.71,
+   "projected",
+   7.47
+  ],
+  "allysonfanning": [
+   2.6,
+   "projected",
+   7.4
+  ],
+  "dominicsegars": [
+   2.6,
+   "projected",
+   7.4
+  ],
+  "leahjones": [
+   2.59,
+   "projected",
+   8.07
+  ],
+  "aidenjeanmarie": [
+   2.47,
+   "projected",
+   7.86
+  ],
+  "carsonpowell": [
+   0,
+   "insufficient",
+   0
+  ],
+  "jayceborg": [
+   0,
+   "insufficient",
+   0
+  ],
+  "marchenke": [
+   0,
+   "insufficient",
+   0
+  ],
+  "abubakardiallo": [
+   0,
+   "insufficient",
+   0
+  ],
+  "aidenfitzharris": [
+   0,
+   "insufficient",
+   0
+  ],
+  "alexclayton": [
+   0,
+   "insufficient",
+   0
+  ],
+  "andersonfarina": [
+   0,
+   "insufficient",
+   0
+  ],
+  "andrewcummiskey": [
+   0,
+   "insufficient",
+   0
+  ],
+  "anthonyczumack": [
+   0,
+   "insufficient",
+   0
+  ],
+  "antoniobulusan": [
+   0,
+   "insufficient",
+   0
+  ],
+  "avaneeshnanjappa": [
+   0,
+   "insufficient",
+   0
+  ],
+  "ayonitemiadebayo": [
+   0,
+   "insufficient",
+   0
+  ],
+  "benjaminmiller": [
+   0,
+   "insufficient",
+   0
+  ],
+  "blakemoralesgoulboure": [
+   0,
+   "insufficient",
+   0
+  ],
+  "briellehudson": [
+   0,
+   "insufficient",
+   0
+  ],
+  "bryantpalmer": [
+   0,
+   "insufficient",
+   0
+  ],
+  "cartertalkowski": [
+   0,
+   "insufficient",
+   0
+  ],
+  "cashmclendon": [
+   0,
+   "insufficient",
+   0
+  ],
+  "charlotteruffener": [
+   0,
+   "insufficient",
+   0
+  ],
+  "colinveit": [
+   0,
+   "insufficient",
+   0
+  ],
+  "connortollman": [
+   0,
+   "insufficient",
+   0
+  ],
+  "damourmcneil": [
+   0,
+   "insufficient",
+   0
+  ],
+  "danielberger": [
+   0,
+   "insufficient",
+   0
+  ],
+  "davidholloway": [
+   0,
+   "insufficient",
+   0
+  ],
+  "dylandiaz": [
+   0,
+   "insufficient",
+   0
+  ],
+  "eddygoodglass": [
+   0,
+   "insufficient",
+   0
+  ],
+  "ellahessari": [
+   0,
+   "insufficient",
+   0
+  ],
+  "evandavis": [
+   0,
+   "insufficient",
+   0
+  ],
+  "gabbyabreu": [
+   0,
+   "insufficient",
+   0
+  ],
+  "heavensomuah": [
+   0,
+   "insufficient",
+   0
+  ],
+  "himavanthmypati": [
+   0,
+   "insufficient",
+   0
+  ],
+  "isabellafisher": [
+   0,
+   "insufficient",
+   0
+  ],
+  "jacksonhowell": [
+   0,
+   "insufficient",
+   0
+  ],
+  "jacksonlynch": [
+   0,
+   "insufficient",
+   0
+  ],
+  "jaydenscott": [
+   0,
+   "insufficient",
+   0
+  ],
+  "johndillon": [
+   0,
+   "insufficient",
+   0
+  ],
+  "joriegreene": [
+   0,
+   "insufficient",
+   0
+  ],
+  "joshoppong": [
+   0,
+   "insufficient",
+   0
+  ],
+  "joshuaalexis": [
+   0,
+   "insufficient",
+   0
+  ],
+  "jovannaranjo": [
+   0,
+   "insufficient",
+   0
+  ],
+  "kellycarey": [
+   0,
+   "insufficient",
+   0
+  ],
+  "leonacushna": [
+   0,
+   "insufficient",
+   0
+  ],
+  "logankelly": [
+   0,
+   "insufficient",
+   0
+  ],
+  "lucasbrighton": [
+   0,
+   "insufficient",
+   0
+  ],
+  "lukealacron": [
+   0,
+   "insufficient",
+   0
+  ],
+  "madelinevanderheide": [
+   0,
+   "insufficient",
+   0
+  ],
+  "madisongargiulo": [
+   0,
+   "insufficient",
+   0
+  ],
+  "maiablacksmith": [
+   0,
+   "insufficient",
+   0
+  ],
+  "makenziebencivengo": [
+   0,
+   "insufficient",
+   0
+  ],
+  "mariatucker": [
+   0,
+   "insufficient",
+   0
+  ],
+  "matthewargenio": [
+   0,
+   "insufficient",
+   0
+  ],
+  "matthewbrischoux": [
+   0,
+   "insufficient",
+   0
+  ],
+  "matthewdeloughery": [
+   0,
+   "insufficient",
+   0
+  ],
+  "matthewfinn": [
+   0,
+   "insufficient",
+   0
+  ],
+  "melodyvergara": [
+   0,
+   "insufficient",
+   0
+  ],
+  "michaelcarey": [
+   0,
+   "insufficient",
+   0
+  ],
+  "mitchellstewart": [
+   0,
+   "insufficient",
+   0
+  ],
+  "mjihim": [
+   0,
+   "insufficient",
+   0
+  ],
+  "naomilocy": [
+   0,
+   "insufficient",
+   0
+  ],
+  "olivergrammerstorf": [
+   0,
+   "insufficient",
+   0
+  ],
+  "parkerlundgren": [
+   0,
+   "insufficient",
+   0
+  ],
+  "quinnpetrose": [
+   0,
+   "insufficient",
+   0
+  ],
+  "rachelschwartz": [
+   0,
+   "insufficient",
+   0
+  ],
+  "richardwilliams": [
+   0,
+   "insufficient",
+   0
+  ],
+  "rishithmuthabathula": [
+   0,
+   "insufficient",
+   0
+  ],
+  "ryanmauer": [
+   0,
+   "insufficient",
+   0
+  ],
+  "sadiesteiner": [
+   0,
+   "insufficient",
+   0
+  ],
+  "samerydelossantos": [
+   0,
+   "insufficient",
+   0
+  ],
+  "sapphiregarrett": [
+   0,
+   "insufficient",
+   0
+  ],
+  "sofiasabin": [
+   0,
+   "insufficient",
+   0
+  ],
+  "sophiakababik": [
+   0,
+   "insufficient",
+   0
+  ],
+  "sophiasterling": [
+   0,
+   "insufficient",
+   0
+  ],
+  "spencerolsen": [
+   0,
+   "insufficient",
+   0
+  ],
+  "stephanieryabov": [
+   0,
+   "insufficient",
+   0
+  ],
+  "taizhang": [
+   0,
+   "insufficient",
+   0
+  ],
+  "verolambert": [
+   0,
+   "insufficient",
+   0
+  ],
+  "victoriaweber": [
+   0,
+   "insufficient",
+   0
+  ],
+  "willbengyak": [
+   0,
+   "insufficient",
+   0
+  ],
+  "yaelperez": [
+   0,
+   "insufficient",
+   0
+  ],
+  "zionfelix": [
+   0,
+   "insufficient",
+   0
+  ]
+ },
+ "draftSave": "Draft saved. 1 change from scoring v5 \u00b7 tables v2. Nothing was published.",
+ "preview": {
+  "diff": [
+   {
+    "key": "participation",
+    "currentText": "1",
+    "nextText": "2"
+   }
+  ],
+  "athletesAffected": 0,
+  "finishedWeeksProtected": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7
+  ],
+  "finishedWeekChanges": 0,
+  "unchanged": true
+ },
+ "draftAndPreviewChangedNothing": true,
+ "nonCommishPublish": {
+  "_status": 403,
+  "error": "Only the commissioner can do that."
+ },
+ "noConfirm": {
+  "_status": 400,
+  "error": "Type PUBLISH to confirm."
+ },
+ "publish": {
+  "ok": true,
+  "version": 1,
+  "message": "Sandbox scoring v1 is live in this test league only. Finished weeks kept their scores.",
+  "finishedWeeksUnchanged": true,
+  "finishedWeeks": 7
+ },
+ "duplicateTap": {
+  "ok": true,
+  "duplicate": true,
+  "message": "Already published (duplicate tap ignored)."
+ },
+ "finishedWeeksIdentical": true,
+ "projectionsChanged": 80,
+ "projectionExamples": [
+  [
+   "madisonriccardi",
+   69.13,
+   71.29
+  ],
+  [
+   "ilungasalerno",
+   40.87,
+   42.53
+  ],
+  [
+   "owenvallinino",
+   37.03,
+   39.63
+  ],
+  [
+   "madelinelarkin",
+   30.82,
+   32.07
+  ],
+  [
+   "jasmineurena",
+   22.7,
+   24.04
+  ],
+  [
+   "lukepotter",
+   21.14,
+   21.81
+  ]
+ ],
+ "rankMeta": {
+  "requestedWeek": 8,
+  "targetWeek": 8,
+  "noMeet": false,
+  "stateCounts": {
+   "projected": 80,
+   "insufficient": 80
+  }
+ },
+ "refresh": "Projections recalculated for 160 athletes in 0 ms.",
+ "fp3Identical": true,
+ "sandboxVersions": [
+  [
+   1,
+   "Published draft"
+  ]
+ ],
+ "restore": {
+  "ok": true,
+  "version": 2,
+  "message": "Sandbox scoring v2 is live in this test league only. Finished weeks kept their scores.",
+  "finishedWeeksUnchanged": true,
+  "finishedWeeks": 7
+ },
+ "afterRestoreVersions": [
+  [
+   2,
+   "Restored global v5 as a new version"
+  ],
+  [
+   1,
+   "Published draft"
+  ]
+ ],
+ "fp4Identical": true,
+ "projectionsBackToBaseline": true,
+ "changelog": [
+  [
+   "restore",
+   "Restored global v5 as a new version \u2192 sandbox v2 (this test league only)"
+  ],
+  [
+   "publish",
+   "sandbox.scoring: Restored global v5 as a new version: sandbox v2"
+  ],
+  [
+   "refresh",
+   "Projections recalculated for 160 athletes (week 8)"
+  ],
+  [
+   "publish",
+   "Published draft \u2192 sandbox v1 (this test league only)"
+  ],
+  [
+   "publish",
+   "sandbox.scoring: Published draft: sandbox v1"
+  ],
+  [
+   "preview",
+   "Previewed draft: 0 athlete-weeks would change"
+  ],
+  [
+   "draft",
+   "Draft saved (participation) \u2014 nothing published"
+  ],
+  [
+   "refresh",
+   "Projections recalculated for 160 athletes (week 8)"
+  ]
+ ]
+}

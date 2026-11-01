@@ -1,0 +1,880 @@
+{
+ "points": {
+  "owenvallinino": {
+   "1": 18,
+   "3": 25,
+   "5": 4,
+   "6": 21.5,
+   "7": 9
+  },
+  "desmondhunt": {
+   "1": 2,
+   "5": 1,
+   "6": 1
+  },
+  "justentolbert": {
+   "1": 1,
+   "2": 26,
+   "3": 35.5,
+   "4": 19,
+   "5": 8,
+   "6": 12.5,
+   "7": 3
+  },
+  "benjaminbellamy": {
+   "1": 7,
+   "4": 6,
+   "5": 17,
+   "6": 9,
+   "7": 3
+  },
+  "beyasalerno": {
+   "1": 7,
+   "2": 33,
+   "3": 37,
+   "4": 36,
+   "5": 12,
+   "6": 24,
+   "7": 8.5
+  },
+  "dominicsegars": {
+   "1": 1,
+   "2": 2,
+   "3": 2,
+   "4": 7,
+   "5": 6,
+   "6": 6
+  },
+  "camilataverez": {
+   "1": 8,
+   "4": 3
+  },
+  "quetzijuarez": {
+   "1": 7,
+   "2": 3,
+   "3": 2,
+   "4": 5,
+   "5": 14,
+   "6": 20,
+   "7": 17.5
+  },
+  "clairecreech": {
+   "1": 2,
+   "5": 3
+  },
+  "sheafern": {
+   "1": 2,
+   "2": 2,
+   "3": 1,
+   "4": 7,
+   "5": 7,
+   "6": 7
+  },
+  "jasmineurena": {
+   "1": 2,
+   "2": 21,
+   "3": 25,
+   "4": 29,
+   "5": 17.5,
+   "6": 17,
+   "7": 29
+  },
+  "danielcibirka": {
+   "1": 15,
+   "2": 23,
+   "3": 6.5,
+   "5": 21,
+   "6": 14.5,
+   "7": 16
+  },
+  "bencabrera": {
+   "1": 6,
+   "3": 6,
+   "4": 2,
+   "5": 21.5,
+   "6": 1.5
+  },
+  "finniandill": {
+   "1": 1,
+   "2": 8,
+   "3": 6,
+   "4": 2,
+   "5": 11,
+   "6": 14.5
+  },
+  "christiancibirka": {
+   "1": 10,
+   "2": 0,
+   "3": 1,
+   "4": -6,
+   "5": 14.5,
+   "6": 14.5
+  },
+  "ilungasalerno": {
+   "1": 22,
+   "2": 35,
+   "3": 35,
+   "4": 29,
+   "5": 23,
+   "6": 14,
+   "7": 34
+  },
+  "matthewlee": {
+   "1": 1
+  },
+  "aidenjeanmarie": {
+   "1": 1,
+   "2": 2,
+   "3": 19,
+   "4": 1,
+   "5": 26.5,
+   "6": 1.5,
+   "7": 4.5
+  },
+  "danielzvonik": {
+   "1": 3,
+   "5": 21,
+   "6": 7.5
+  },
+  "samlouis": {
+   "1": 1,
+   "2": 1,
+   "3": 4,
+   "4": 1,
+   "5": 1,
+   "6": 1
+  },
+  "bobbylynch": {
+   "1": 1,
+   "2": 4,
+   "5": 12.5,
+   "6": -3
+  },
+  "kaieljohnson": {
+   "1": 1,
+   "2": 4,
+   "5": 13,
+   "6": -3
+  },
+  "donovanmansano": {
+   "1": 2,
+   "2": 5,
+   "3": 2,
+   "4": 1.5,
+   "5": 1,
+   "6": 6.5,
+   "7": 6
+  },
+  "jasonporter": {
+   "1": 2,
+   "3": 2,
+   "4": 7,
+   "5": 6.5,
+   "6": -2
+  },
+  "lukepotter": {
+   "1": 22,
+   "2": 25,
+   "3": 39,
+   "4": 42,
+   "5": 24,
+   "6": 29,
+   "7": 18
+  },
+  "colinlewis": {
+   "1": 20,
+   "2": 18,
+   "3": 11,
+   "4": 22,
+   "5": 3,
+   "6": 16,
+   "7": 14.5
+  },
+  "connorscully": {
+   "1": 1,
+   "2": 1,
+   "3": 1
+  },
+  "tylerhenriquez": {
+   "1": 1,
+   "2": 2,
+   "3": 2,
+   "4": 7,
+   "5": 8,
+   "6": 1
+  },
+  "jackferrara": {
+   "1": 6,
+   "2": 1,
+   "3": 6,
+   "4": 2,
+   "5": 9,
+   "6": 7,
+   "7": 11
+  },
+  "jamesmcguirk": {
+   "1": 6,
+   "2": 6,
+   "3": 6,
+   "5": 18,
+   "6": 9,
+   "7": 8
+  },
+  "albertkirienko": {
+   "1": 9,
+   "2": 4,
+   "3": 14,
+   "4": 2,
+   "5": 6,
+   "6": 8
+  },
+  "braydenforsstrom": {
+   "1": 1,
+   "2": 6,
+   "3": 1,
+   "5": 1
+  },
+  "owenwissner": {
+   "1": 6,
+   "2": 20,
+   "3": 6.5,
+   "5": 30
+  },
+  "michaelmccafferty": {
+   "1": 13,
+   "2": 5,
+   "3": 14.5,
+   "4": 2.5,
+   "5": 9.5
+  },
+  "masoncotton": {
+   "1": 1,
+   "2": 14,
+   "3": 6.5,
+   "4": 3.5,
+   "5": 1,
+   "6": 3,
+   "7": 1
+  },
+  "ethanurenabarbosa": {
+   "1": 1,
+   "2": 14,
+   "3": 1,
+   "4": 2,
+   "5": 1,
+   "6": 8,
+   "7": 1.5
+  },
+  "brandonlee": {
+   "1": 1,
+   "2": 11,
+   "3": 1,
+   "4": 3,
+   "5": 1.5,
+   "6": 1.5
+  },
+  "oliviacibirka": {
+   "1": 29,
+   "2": 22,
+   "3": 17.5,
+   "4": 21.5,
+   "5": 49,
+   "6": 18
+  },
+  "patriciaking": {
+   "1": 1,
+   "2": 2,
+   "4": 2,
+   "5": 1,
+   "6": 6
+  },
+  "lilacabrera": {
+   "1": 1,
+   "3": 2,
+   "5": 1,
+   "6": 3,
+   "7": 6
+  },
+  "avaliebert": {
+   "1": 1,
+   "2": 6,
+   "3": 4.5,
+   "4": 3,
+   "5": 21.5,
+   "6": 11
+  },
+  "lydiasemo": {
+   "1": 19,
+   "2": 17,
+   "3": 19,
+   "4": 10,
+   "5": 32.5,
+   "6": 10.5,
+   "7": 7
+  },
+  "madelinelarkin": {
+   "1": 26,
+   "3": 24,
+   "4": 10,
+   "5": 1,
+   "6": 29,
+   "7": 41
+  },
+  "ameliahoyt": {
+   "1": 2,
+   "2": 18,
+   "3": 2,
+   "4": 1,
+   "5": 2,
+   "6": 15.5,
+   "7": 7
+  },
+  "callielaudato": {
+   "1": 3,
+   "2": 2,
+   "3": 4,
+   "4": 1,
+   "5": 5,
+   "6": 2
+  },
+  "graceotto": {
+   "1": 3,
+   "2": 4
+  },
+  "kalliopeenos": {
+   "1": 10,
+   "2": 5,
+   "3": 4,
+   "4": 1,
+   "5": 10,
+   "6": 10,
+   "7": 6.5
+  },
+  "violetpruitt": {
+   "1": 2
+  },
+  "ceciliacruz": {
+   "1": 3,
+   "2": 7,
+   "4": 2,
+   "6": 19,
+   "7": 4.5
+  },
+  "skyappleton": {
+   "1": 27,
+   "2": 19,
+   "4": 19,
+   "5": 29,
+   "6": 9.5
+  },
+  "kassandraenos": {
+   "1": 22,
+   "2": 31,
+   "3": 8.5,
+   "4": 20.5,
+   "5": 22.5,
+   "6": 4.5,
+   "7": 15
+  },
+  "noemigoitia": {
+   "1": 19,
+   "2": 22,
+   "4": 14,
+   "5": 47,
+   "6": 2.5,
+   "7": 11.5
+  },
+  "leahjones": {
+   "1": 1,
+   "2": 12,
+   "3": 17,
+   "4": 2,
+   "5": 6,
+   "6": 6
+  },
+  "emilyrostanazo": {
+   "1": 1,
+   "2": 12,
+   "3": 2,
+   "5": 8
+  },
+  "marisabarnsby": {
+   "1": 3,
+   "2": 7,
+   "4": -2,
+   "5": 1.5,
+   "6": 1.5
+  },
+  "catherinelarkin": {
+   "1": -3,
+   "2": 2,
+   "3": 2,
+   "5": 1,
+   "6": 6,
+   "7": 6
+  },
+  "karleeking": {
+   "1": 6,
+   "2": 7,
+   "4": 2,
+   "5": 7.5,
+   "6": 1
+  },
+  "emmadoyle": {
+   "1": 6,
+   "2": 3,
+   "4": 1,
+   "5": 6,
+   "6": 7,
+   "7": 6
+  },
+  "jeffdong": {
+   "2": 2,
+   "3": 7,
+   "4": 2,
+   "5": 8.5,
+   "6": 9
+  },
+  "jameschowanski": {
+   "2": 3,
+   "4": 1,
+   "5": 10.5,
+   "6": 12.5,
+   "7": 3
+  },
+  "ethanlopez": {
+   "2": 3,
+   "4": 1,
+   "6": 6
+  },
+  "braydenpeck": {
+   "2": 8,
+   "3": 1,
+   "4": 3
+  },
+  "maciestermer": {
+   "2": 3,
+   "3": 2,
+   "6": 6
+  },
+  "liahmarcella": {
+   "2": 3,
+   "3": 2,
+   "5": 7,
+   "6": 12
+  },
+  "rosiekelly": {
+   "2": 1,
+   "6": 2
+  },
+  "faithcaoili": {
+   "2": 6,
+   "3": 2,
+   "6": 1
+  },
+  "allysonfanning": {
+   "2": 3,
+   "3": 6,
+   "4": 6,
+   "5": 1,
+   "6": 1,
+   "7": 8.5
+  },
+  "danieldratch": {
+   "3": 2
+  },
+  "diyarthabit": {
+   "3": 1
+  },
+  "hudsonalarcon": {
+   "3": 6,
+   "4": 2,
+   "5": 11.5,
+   "6": 8
+  },
+  "aidenschultze": {
+   "3": 1
+  },
+  "kingstonallen": {
+   "3": 1
+  },
+  "noahpadilla": {
+   "3": 1
+  },
+  "benhuang": {
+   "3": 6,
+   "4": 2
+  },
+  "jackbaxter": {
+   "3": 1
+  },
+  "kaitlynhartwig": {
+   "3": 6.5,
+   "4": -6,
+   "5": 1.5,
+   "6": 6.5,
+   "7": 11.5
+  },
+  "jayceborg": {
+   "4": 1
+  },
+  "marchenke": {
+   "4": 1
+  },
+  "carsonpowell": {
+   "4": 1
+  },
+  "bradenwork": {
+   "4": 1
+  },
+  "alinascheiman": {
+   "4": 3.5,
+   "5": 1,
+   "6": 7.5
+  },
+  "justinalexis": {
+   "6": 2
+  }
+ },
+ "names": {
+  "aidenfitzharris": "Aiden FitzHarris",
+  "aidenjeanmarie": "Aiden Jean-Marie",
+  "madelinelarkin": "Madeline Larkin",
+  "michaelcarey": "Michael Carey",
+  "allysonfanning": "Allyson Fanning",
+  "ameliahoyt": "Amelia Hoyt",
+  "benjaminbellamy": "Ben Bellamy",
+  "bencabrera": "Ben Cabrera",
+  "beyasalerno": "Beya Salerno",
+  "bobbylynch": "Robert Lynch",
+  "camilataverez": "Camila Tavarez",
+  "carsonpowell": "Carson Powell",
+  "ceciliacruz": "Cecelia Cruz",
+  "charlotteruffener": "Charlotte Ruffener",
+  "clairecreech": "Claire Creech",
+  "colinlewis": "Colin Lewis",
+  "connorscully": "Connor Scully",
+  "danielberger": "Daniel Berger",
+  "danieldratch": "Daniel Dratch",
+  "danielzvonik": "Daniel Zvonick",
+  "diyarthabit": "Diyar Thabit",
+  "dominicsegars": "Dominic Segars",
+  "donovanmansano": "Donovan Mansano",
+  "dylandiaz": "Dylan Diaz",
+  "eddygoodglass": "Eddy Goodglass",
+  "emilyrostanazo": "Emily Rostanzo",
+  "emmadoyle": "Emma Doyle",
+  "ethanlopez": "Ethan Lopez",
+  "ethanurenabarbosa": "Ethan Urena-Barboza",
+  "finniandill": "Finnian Dill",
+  "gabbyabreu": "Gabby Abreu",
+  "graceotto": "Grace Otto",
+  "heavensomuah": "Heaven Somuah",
+  "himavanthmypati": "Himavanth Mypati",
+  "hudsonalarcon": "Hudson Alarcon",
+  "isabellafisher": "Isabella Fisher",
+  "jackbaxter": "Jack Baxter",
+  "jameschowanski": "James Chowanski",
+  "jasmineurena": "Jasmine Urena",
+  "jasonporter": "Jason Porter",
+  "jeffdong": "Jeff Dong",
+  "johndillon": "John Dillon",
+  "joshoppong": "Josh Oppong",
+  "justinalexis": "Justin Alexis",
+  "kaieljohnson": "Kaiel Johnson",
+  "kaitlynhartwig": "Kaitlyn Hartwig",
+  "kalliopeenos": "Kalliope Enos",
+  "kassandraenos": "Kassandra Enos",
+  "kellycarey": "Kelly Carey",
+  "kingstonallen": "Kingston Allen",
+  "leahjones": "Leah Jones",
+  "leonacushna": "Leona Cushna",
+  "liahmarcella": "Liah Marcella",
+  "lilacabrera": "Lila Cabrera",
+  "logankelly": "Logan Kelly",
+  "lukepotter": "Luke Potter",
+  "lydiasemo": "Lydia Semo",
+  "maciestermer": "Macie Stermer",
+  "madisongargiulo": "Madison Gargiulo",
+  "marchenke": "Marc Henke",
+  "matthewbrischoux": "Matthew Brischoux",
+  "michaelmccafferty": "Michael McCafferty",
+  "mjihim": "Chinagoram Ihim",
+  "noahpadilla": "Noah Padilla",
+  "noemigoitia": "Noemi Goitia",
+  "owenvallinino": "Owen Vallinino",
+  "quetzijuarez": "Quetzi Juarez",
+  "avaliebert": "Ava Liebert",
+  "rishithmuthabathula": "Rishith Muthabathula",
+  "samerydelossantos": "Samery De los Santos",
+  "skyappleton": "Sky Appleton",
+  "sophiakababik": "Sophia Kababik",
+  "sophiasterling": "Sophia Sterling",
+  "taizhang": "Tai Zhang",
+  "tylerhenriquez": "Tyler Henriquez",
+  "yaelperez": "Yael Perez",
+  "zionfelix": "Zion Felix",
+  "abubakardiallo": "Abubakar Diallo",
+  "aidenschultze": "Aiden Schultze",
+  "albertkirienko": "Albert Kirienko",
+  "alexclayton": "Alex Clayton",
+  "andrewcummiskey": "Andrew Cummiskey",
+  "anthonyczumack": "Anthony Czumack",
+  "antoniobulusan": "Antonio Bulusan",
+  "avaneeshnanjappa": "Avaneesh Nanjappa",
+  "ayonitemiadebayo": "Ayonitemi Adebayo",
+  "benhuang": "Ben Huang",
+  "benjaminmiller": "Benjamin Miller",
+  "bradenwork": "Braden Work",
+  "brandonlee": "Brandon Lee",
+  "braydenforsstrom": "Brayden Forsstrom",
+  "braydenpeck": "Brayden Peck",
+  "cartertalkowski": "Carter Talkowski",
+  "cashmclendon": "Cash McLendon",
+  "christiancibirka": "Christian Cibirka",
+  "colinveit": "Colin Veit",
+  "danielcibirka": "Daniel Cibirka",
+  "davidholloway": "David Holloway",
+  "desmondhunt": "Desmond Hunt",
+  "evandavis": "Evan Davis",
+  "ilungasalerno": "Ilunga Salerno",
+  "jackferrara": "Jack Ferrara",
+  "jacksonhowell": "Jackson Howell",
+  "jamesmcguirk": "James McGuirk",
+  "jayceborg": "Jayce Borg",
+  "jaydenscott": "Jayden Scott",
+  "jovannaranjo": "Jovan Naranjo",
+  "justentolbert": "Justen Tolbert",
+  "masoncotton": "Mason Cotton",
+  "matthewargenio": "Matthew Argenio",
+  "matthewdeloughery": "Matthew DeLoughery",
+  "matthewfinn": "Matthew Finn",
+  "matthewlee": "Matthew Lee",
+  "mitchellstewart": "Mitchell Stewart",
+  "olivergrammerstorf": "Oliver Grammerstorf",
+  "owenwissner": "Owen Wissner",
+  "quinnpetrose": "Quinn Petrose",
+  "ryanmauer": "Ryan Mauer",
+  "samlouis": "Sam Louis",
+  "spencerolsen": "Spencer Olsen",
+  "verolambert": "Vero Lambert",
+  "willbengyak": "Will Bengyak",
+  "alinascheiman": "Alina Scheiman",
+  "andersonfarina": "Anderson Farina",
+  "callielaudato": "Callie Laudato",
+  "catherinelarkin": "Catherine Larkin",
+  "damourmcneil": "D'Amour McNeil",
+  "ellahessari": "Ella Hessari",
+  "faithcaoili": "Faith Caoili",
+  "joriegreene": "Jorie Greene",
+  "karleeking": "Karlee King",
+  "madelinevanderheide": "Madeline VanDerHeide",
+  "maiablacksmith": "Maia Blacksmith",
+  "makenziebencivengo": "Makenzie Bencivengo",
+  "marisabarnsby": "Marisa Barnsby",
+  "melodyvergara": "Melody Vergara",
+  "naomilocy": "Naomi Locy",
+  "oliviacibirka": "Olivia Cibirka",
+  "patriciaking": "Patricia King",
+  "rachelschwartz": "Rachel Schwartz",
+  "rosiekelly": "Rosie Kelly",
+  "sadiesteiner": "Sadie Steiner",
+  "sheafern": "Shea Fern",
+  "sofiasabin": "Sofia Sabin",
+  "stephanieryabov": "Stephanie Ryabov",
+  "victoriaweber": "Victoria Weber",
+  "violetpruitt": "Violet Pruitt",
+  "blakemoralesgoulboure": "Blake Morales-Goulboure",
+  "jacksonlynch": "Jackson Lynch",
+  "bryantpalmer": "Bryant Palmer",
+  "mariatucker": "Maria Tucker",
+  "sapphiregarrett": "Sapphire Garrett",
+  "parkerlundgren": "Parker Lundgren",
+  "lucasbrighton": "Lucas Brighton",
+  "lukealacron": "Luke Alacron",
+  "joshuaalexis": "Joshua Alexis",
+  "richardwilliams": "Richard Williams",
+  "connortollman": "Connor Tollman",
+  "briellehudson": "Brielle Hudson",
+  "juneschreiber": "June Schreiber"
+ },
+ "schedule": [
+  {
+   "id": "1-u4e2032a573964cb1a34f291",
+   "week": 1,
+   "home": null,
+   "away": null,
+   "homeScore": 34,
+   "awayScore": 58,
+   "homeFinal": 34,
+   "awayFinal": 58
+  },
+  {
+   "id": "1-ub47f11b04d2a456797d2925",
+   "week": 1,
+   "home": null,
+   "away": null,
+   "homeScore": 55,
+   "awayScore": 26,
+   "homeFinal": 55,
+   "awayFinal": 26
+  },
+  {
+   "id": "2-uf5d9c566d0ad409688c3185",
+   "week": 2,
+   "home": null,
+   "away": null,
+   "homeScore": 27,
+   "awayScore": 51,
+   "homeFinal": 27,
+   "awayFinal": 51
+  },
+  {
+   "id": "2-ub47f11b04d2a456797d2925",
+   "week": 2,
+   "home": null,
+   "away": null,
+   "homeScore": 34,
+   "awayScore": 39,
+   "homeFinal": 34,
+   "awayFinal": 39
+  },
+  {
+   "id": "3-u4e2032a573964cb1a34f291",
+   "week": 3,
+   "home": null,
+   "away": null,
+   "homeScore": 48,
+   "awayScore": 41,
+   "homeFinal": 48,
+   "awayFinal": 41
+  },
+  {
+   "id": "3-uf5d9c566d0ad409688c3185",
+   "week": 3,
+   "home": null,
+   "away": null,
+   "homeScore": 58,
+   "awayScore": 46,
+   "homeFinal": 58,
+   "awayFinal": 46
+  },
+  {
+   "id": "4-u4e2032a573964cb1a34f291",
+   "week": 4,
+   "home": null,
+   "away": null,
+   "homeScore": 64,
+   "awayScore": 31,
+   "homeFinal": 64,
+   "awayFinal": 31
+  },
+  {
+   "id": "4-ub47f11b04d2a456797d2925",
+   "week": 4,
+   "home": null,
+   "away": null,
+   "homeScore": 29.5,
+   "awayScore": 43,
+   "homeFinal": 29.5,
+   "awayFinal": 43
+  },
+  {
+   "id": "5-uf5d9c566d0ad409688c3185",
+   "week": 5,
+   "home": null,
+   "away": null,
+   "homeScore": 71.5,
+   "awayScore": 32,
+   "homeFinal": 71.5,
+   "awayFinal": 32
+  },
+  {
+   "id": "5-ub47f11b04d2a456797d2925",
+   "week": 5,
+   "home": null,
+   "away": null,
+   "homeScore": 39,
+   "awayScore": 90,
+   "homeFinal": 39,
+   "awayFinal": 90
+  },
+  {
+   "id": "6-u4e2032a573964cb1a34f291",
+   "week": 6,
+   "home": null,
+   "away": null,
+   "homeScore": 49,
+   "awayScore": 60,
+   "homeFinal": 49,
+   "awayFinal": 60
+  },
+  {
+   "id": "6-uf5d9c566d0ad409688c3185",
+   "week": 6,
+   "home": null,
+   "away": null,
+   "homeScore": 38,
+   "awayScore": 32.5,
+   "homeFinal": 38,
+   "awayFinal": 32.5
+  },
+  {
+   "id": "7-u4e2032a573964cb1a34f291",
+   "week": 7,
+   "home": null,
+   "away": null,
+   "homeScore": 26,
+   "awayScore": 27.5,
+   "homeFinal": 26,
+   "awayFinal": 27.5
+  },
+  {
+   "id": "7-ub47f11b04d2a456797d2925",
+   "week": 7,
+   "home": null,
+   "away": null,
+   "homeScore": 85,
+   "awayScore": 22.5,
+   "homeFinal": 85,
+   "awayFinal": 22.5
+  },
+  {
+   "id": "8-uf5d9c566d0ad409688c3185",
+   "week": 8,
+   "home": null,
+   "away": null,
+   "homeScore": 0,
+   "awayScore": 0,
+   "homeFinal": null,
+   "awayFinal": null
+  },
+  {
+   "id": "8-ub47f11b04d2a456797d2925",
+   "week": 8,
+   "home": null,
+   "away": null,
+   "homeScore": 0,
+   "awayScore": 0,
+   "homeFinal": null,
+   "awayFinal": null
+  }
+ ],
+ "standings": [
+  "uad315679c66e4051b8c33f9",
+  "uf5d9c566d0ad409688c3185",
+  "ub47f11b04d2a456797d2925",
+  "u4e2032a573964cb1a34f291"
+ ],
+ "global": {
+  "mainLeagueId": "fb75aa8b4e2241a68fce",
+  "mainLeagueCode": "T7RAN2",
+  "storedMainLeagueId": "fb75aa8b4e2241a68fce",
+  "leaguesWithMainCode": 1,
+  "version": 81,
+  "scoringVersion": 63,
+  "meets": 7,
+  "standards": 84,
+  "performance": 600
+ }
+}

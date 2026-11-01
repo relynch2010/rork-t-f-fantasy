@@ -1,0 +1,130 @@
+{
+ "leak": [],
+ "weeks": {
+  "1": {
+   "noMeet": false,
+   "estimate": true,
+   "stateCounts": {
+    "projected": 79,
+    "insufficient": 81
+   }
+  },
+  "2": {
+   "noMeet": false,
+   "estimate": true,
+   "stateCounts": {
+    "projected": 79,
+    "insufficient": 81
+   }
+  },
+  "3": {
+   "noMeet": false,
+   "estimate": true,
+   "stateCounts": {
+    "projected": 79,
+    "insufficient": 81
+   }
+  },
+  "4": {
+   "noMeet": false,
+   "estimate": true,
+   "stateCounts": {
+    "projected": 79,
+    "insufficient": 81
+   }
+  },
+  "5": {
+   "noMeet": false,
+   "estimate": true,
+   "stateCounts": {
+    "projected": 79,
+    "insufficient": 81
+   }
+  },
+  "6": {
+   "noMeet": false,
+   "estimate": true,
+   "stateCounts": {
+    "projected": 79,
+    "insufficient": 81
+   }
+  },
+  "7": {
+   "noMeet": false,
+   "estimate": true,
+   "stateCounts": {
+    "projected": 79,
+    "insufficient": 81
+   }
+  },
+  "8": {
+   "noMeet": false,
+   "estimate": true,
+   "stateCounts": {
+    "projected": 79,
+    "insufficient": 81
+   }
+  },
+  "9": {
+   "noMeet": false,
+   "estimate": true,
+   "stateCounts": {
+    "projected": 79,
+    "insufficient": 81
+   }
+  }
+ },
+ "preseason": {
+  "stateCounts": {
+   "projected": 60,
+   "insufficient": 100
+  },
+  "top": [
+   [
+    "madelinelarkin",
+    32.58
+   ],
+   [
+    "owenvallinino",
+    27.72
+   ],
+   [
+    "jasmineurena",
+    21.24
+   ],
+   [
+    "lukepotter",
+    20.62
+   ],
+   [
+    "skyappleton",
+    18.2
+   ]
+  ]
+ },
+ "bye": {
+  "8": "noMeet (No meet this week)",
+  "9": "noMeet",
+  "10": "projected on 2026-12-30"
+ },
+ "postponed": {
+  "10": [
+   "2027-01-06",
+   "projected",
+   "Projected",
+   21.73
+  ],
+  "11": [
+   "2026-10-29",
+   "projected",
+   "Estimate: typical meet (no meet scheduled yet)",
+   22.48
+  ],
+  "12": [
+   "2026-10-29",
+   "projected",
+   "Estimate: typical meet (no meet scheduled yet)",
+   22.48
+  ]
+ }
+}

@@ -1,0 +1,134 @@
+{
+ "ok": true,
+ "at": 1792628784519,
+ "modelVersion": "proj-1.3",
+ "seasonNote": "166 results from the 2025-26 indoor season were scored on the 2026 season tables (the earliest authoritative tables).",
+ "meetsTested": 6,
+ "samples": 177,
+ "strict": true,
+ "withEntries": {
+  "n": 177,
+  "mae": 7.7,
+  "rmse": 11.82,
+  "bias": -2.88,
+  "coverage": 0.63
+ },
+ "withoutEntries": {
+  "n": 177,
+  "mae": 7.62,
+  "rmse": 11.91,
+  "bias": -1.9,
+  "coverage": 0.71
+ },
+ "naiveLastMeet": {
+  "n": 177,
+  "mae": 9.73,
+  "rmse": 15.14,
+  "bias": -2.01,
+  "coverage": 0.14
+ },
+ "byConfidence": {
+  "High": {
+   "n": 29,
+   "mae": 11.44,
+   "rmse": 18.12,
+   "bias": -4.24,
+   "coverage": 0.69
+  },
+  "Medium": {
+   "n": 68,
+   "mae": 6.08,
+   "rmse": 8.8,
+   "bias": -1.02,
+   "coverage": 0.68
+  },
+  "Low": {
+   "n": 80,
+   "mae": 7.73,
+   "rmse": 11.16,
+   "bias": -3.96,
+   "coverage": 0.57
+  }
+ },
+ "pool": {
+  "n": 436,
+  "mae": 6.82,
+  "rmse": 10.3,
+  "bias": 1.84,
+  "coverage": 0.71,
+  "states": {
+   "projected": 436
+  }
+ },
+ "headToHead": {
+  "correct": 1933,
+  "total": 2774,
+  "accuracy": 0.7
+ },
+ "perMeet": [
+  {
+   "date": "2025-12-20",
+   "meet": "Armory 2025-12-20",
+   "athletes": 18,
+   "mae": 10.97,
+   "bias": -8.64,
+   "projected": 209.5,
+   "actual": 365
+  },
+  {
+   "date": "2026-01-02",
+   "meet": "Armory 2026-01-02",
+   "athletes": 24,
+   "mae": 6.77,
+   "bias": 1.56,
+   "projected": 302.95,
+   "actual": 265.5
+  },
+  {
+   "date": "2026-01-09",
+   "meet": "Armory 2026-01-09",
+   "athletes": 19,
+   "mae": 9.32,
+   "bias": -6.53,
+   "projected": 182.99,
+   "actual": 307
+  },
+  {
+   "date": "2026-01-16",
+   "meet": "Armory 2026-01-16",
+   "athletes": 47,
+   "mae": 8.25,
+   "bias": -4.13,
+   "projected": 496.58,
+   "actual": 690.5
+  },
+  {
+   "date": "2026-02-07",
+   "meet": "Armory 2026-02-07",
+   "athletes": 45,
+   "mae": 5.1,
+   "bias": -0.41,
+   "projected": 452.34,
+   "actual": 471
+  },
+  {
+   "date": "2026-02-16",
+   "meet": "Armory 2026-02-16",
+   "athletes": 24,
+   "mae": 8.71,
+   "bias": -2.3,
+   "projected": 411.37,
+   "actual": 466.5
+  }
+ ],
+ "notes": [
+  "Each meet is projected using only results dated before it (no peeking). Points are the real engine's points under the current rules.",
+  "withEntries = the athlete's events at that meet were known in advance (as with published entries); withoutEntries = events had to be guessed from history.",
+  "naiveLastMeet = 'they'll score what they scored last meet' baseline, for comparison.",
+  "coverage = share of actual scores within the projected \u00b1 spread.",
+  "headToHead = for every pair of athletes at the same meet, how often the one projected higher actually scored more.",
+  "STRICT: marks on file (PBs) were ignored because they may be newer than the meet; only results dated before each meet were used.",
+  "withEntries is OPTIMISTIC: it uses the events each athlete actually contested as a stand-in for published entries.",
+  "pool = every athlete with earlier results projected without entries (as on the waiver wire); actual = 0 when they didn't compete."
+ ]
+}

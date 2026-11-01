@@ -1,0 +1,848 @@
+{
+ "ok": true,
+ "at": 1792628855287,
+ "published": false,
+ "meets": 7,
+ "results": 545,
+ "rules": {
+  "enabled": {},
+  "applies": {},
+  "participation": 1,
+  "overall": [
+   10,
+   8,
+   6,
+   4,
+   2,
+   1
+  ],
+  "relay": [
+   5,
+   4,
+   3,
+   2,
+   1,
+   0.5
+  ],
+  "pb": 4,
+  "sb": 2,
+  "bestMode": "single",
+  "heat": [
+   3,
+   2,
+   1
+  ],
+  "percentile": [
+   {
+    "pct": 0.05,
+    "pts": 15
+   },
+   {
+    "pct": 0.1,
+    "pts": 12
+   },
+   {
+    "pct": 0.2,
+    "pts": 8
+   },
+   {
+    "pct": 0.3,
+    "pts": 5
+   },
+   {
+    "pct": 0.4,
+    "pts": 2
+   }
+  ],
+  "standardCap": 20,
+  "schoolRecord": 20,
+  "fumble": -5,
+  "dqdnf": -4
+ },
+ "rulesVersion": "scoring v5 \u00b7 tables v2",
+ "max": {
+  "rows": [
+   {
+    "code": "part",
+    "label": "Participation",
+    "points": 1,
+    "note": "Every athlete, every event entered (per relay leg too)."
+   },
+   {
+    "code": "place",
+    "label": "Overall place (1st)",
+    "points": 10,
+    "note": "Official overall place in the event."
+   },
+   {
+    "code": "heat",
+    "label": "Heat / flight place (1st)",
+    "points": 3,
+    "note": "Place within the athlete's own heat or flight. The winner of the fastest heat is usually also 1st overall."
+   },
+   {
+    "code": "pct",
+    "label": "Seeded percentile (top 5%)",
+    "points": 15,
+    "note": "Overall place \u00f7 field size. Needs a field of 20+ for a top-5% tier (1st of 20)."
+   },
+   {
+    "code": "perf",
+    "label": "Time / mark table (top tier)",
+    "points": 5,
+    "note": "Highest active 2026 table tier."
+   },
+   {
+    "code": "best",
+    "label": "Personal best",
+    "points": 4,
+    "note": "PB or SB, never both (PB pays the PB value only)."
+   },
+   {
+    "code": "std",
+    "label": "National / state standard",
+    "points": 20,
+    "note": "Highest standard, capped at 20 per athlete per SEASON (upgrades pay the difference). Only the first qualifying event can carry it."
+   },
+   {
+    "code": "sr",
+    "label": "School record",
+    "points": 20,
+    "note": "Commissioner-confirmed, once per athlete/event/season."
+   }
+  ],
+  "total": 78,
+  "placeRelatedTotal": 28,
+  "repeatableMax": 38,
+  "explanation": [
+   "Theoretical one-event maximum: Participation 1 + Overall place (1st) 10 + Heat / flight place (1st) 3 + Seeded percentile (top 5%) 15 + Time / mark table (top tier) 5 + Personal best 4 + National / state standard 20 + School record 20 = 78.",
+   "Without the one-off categories (standard 20, school record 20), the most a single event can pay at any meet is 38.",
+   "Three categories reward finishing position in the same race: overall place 10, heat place 3, percentile 15 = 28 points for one win."
+  ]
+ },
+ "audit": {
+  "stacking": {
+   "individualResults": 493,
+   "place": {
+    "n": 81,
+    "pct": 16.43
+   },
+   "heat": {
+    "n": 168,
+    "pct": 34.08
+   },
+   "percentile": {
+    "n": 197,
+    "pct": 39.96
+   },
+   "placeAndPercentile": {
+    "n": 77,
+    "pct": 15.62
+   },
+   "percentileWithoutPlace": {
+    "n": 120,
+    "pct": 24.34
+   },
+   "placeAndHeat": {
+    "n": 59,
+    "pct": 11.97
+   },
+   "heatSameAsOverall": {
+    "n": 51,
+    "pct": 10.34
+   },
+   "placeHeatPercentile": {
+    "n": 58,
+    "pct": 11.76
+   },
+   "perfAndPlace": {
+    "n": 74,
+    "pct": 15.01
+   },
+   "bestAndPlace": {
+    "n": 37,
+    "pct": 7.51
+   },
+   "standardAndPlace": {
+    "n": 3,
+    "pct": 0.61
+   },
+   "winners": 28,
+   "winnersAlsoHeat1": 28,
+   "winnersAlsoTopPct": 28,
+   "avgWinnerPlaceTypePoints": 27.79,
+   "placeTypeShareOfAllPoints": 60.76,
+   "redundantPoints": 618,
+   "topEvents": [
+    {
+     "athleteId": "madelinelarkin",
+     "event": "600m",
+     "meet": "Armory 2026-02-16",
+     "date": "2026-02-16",
+     "mark": "1:36.83",
+     "place": 1,
+     "heatPlace": 1,
+     "seeded": 47,
+     "total": 53,
+     "lines": {
+      "part": 1,
+      "place": 10,
+      "heat": 3,
+      "pct": 15,
+      "perf": 2,
+      "best": 2,
+      "std": 20
+     }
+    },
+    {
+     "athleteId": "lukepotter",
+     "event": "Mile",
+     "meet": "Armory 2025-12-12",
+     "date": "2025-12-12",
+     "mark": "4:29.86",
+     "place": 2,
+     "heatPlace": 2,
+     "seeded": 39,
+     "total": 45,
+     "lines": {
+      "part": 1,
+      "place": 8,
+      "heat": 2,
+      "pct": 12,
+      "perf": 2,
+      "std": 20
+     }
+    },
+    {
+     "athleteId": "madisonriccardi",
+     "event": "Long Jump",
+     "meet": "Armory 2026-01-09",
+     "date": "2026-01-09",
+     "mark": "18-09.00",
+     "place": 1,
+     "heatPlace": 1,
+     "seeded": 66,
+     "total": 38,
+     "lines": {
+      "part": 1,
+      "place": 10,
+      "heat": 3,
+      "pct": 15,
+      "perf": 5,
+      "best": 4
+     }
+    },
+    {
+     "athleteId": "oliviacibirka",
+     "event": "1000m",
+     "meet": "Armory 2026-01-16",
+     "date": "2026-01-16",
+     "mark": "2:59.15",
+     "place": 6,
+     "heatPlace": 6,
+     "seeded": 44,
+     "total": 36,
+     "lines": {
+      "part": 1,
+      "place": 1,
+      "pct": 8,
+      "perf": 2,
+      "best": 4,
+      "std": 20
+     }
+    },
+    {
+     "athleteId": "madisonriccardi",
+     "event": "Long Jump",
+     "meet": "Armory 2025-12-12",
+     "date": "2025-12-12",
+     "mark": "18-02.75",
+     "place": 2,
+     "heatPlace": 2,
+     "seeded": 56,
+     "total": 35,
+     "lines": {
+      "part": 1,
+      "place": 8,
+      "heat": 2,
+      "pct": 15,
+      "perf": 5,
+      "best": 4
+     }
+    },
+    {
+     "athleteId": "ilungasalerno",
+     "event": "55m Hurdles",
+     "meet": "Armory 2026-01-09",
+     "date": "2026-01-09",
+     "mark": "7.75q",
+     "place": 1,
+     "heatPlace": 1,
+     "seeded": 71,
+     "total": 35,
+     "lines": {
+      "part": 1,
+      "place": 10,
+      "heat": 3,
+      "pct": 15,
+      "perf": 2,
+      "best": 4
+     }
+    },
+    {
+     "athleteId": "madisonriccardi",
+     "event": "55m Hurdles",
+     "meet": "Armory 2026-01-09",
+     "date": "2026-01-09",
+     "mark": "8.31q",
+     "place": 1,
+     "heatPlace": 1,
+     "seeded": 93,
+     "total": 35,
+     "lines": {
+      "part": 1,
+      "place": 10,
+      "heat": 3,
+      "pct": 15,
+      "perf": 2,
+      "best": 4
+     }
+    },
+    {
+     "athleteId": "ilungasalerno",
+     "event": "55m Hurdles",
+     "meet": "Armory 2026-01-09",
+     "date": "2026-01-09",
+     "mark": "7.73",
+     "place": 1,
+     "heatPlace": 1,
+     "seeded": 71,
+     "total": 35,
+     "lines": {
+      "part": 1,
+      "place": 10,
+      "heat": 3,
+      "pct": 15,
+      "perf": 2,
+      "best": 4
+     }
+    },
+    {
+     "athleteId": "madisonriccardi",
+     "event": "Triple Jump",
+     "meet": "Armory 2025-12-12",
+     "date": "2025-12-12",
+     "mark": "38-03.00",
+     "place": 1,
+     "heatPlace": 1,
+     "seeded": 40,
+     "total": 34,
+     "lines": {
+      "part": 1,
+      "place": 10,
+      "heat": 3,
+      "pct": 15,
+      "perf": 5
+     }
+    },
+    {
+     "athleteId": "madisonriccardi",
+     "event": "300m",
+     "meet": "Armory 2025-12-20",
+     "date": "2025-12-20",
+     "mark": "42.18",
+     "place": 1,
+     "heatPlace": 1,
+     "seeded": 65,
+     "total": 34,
+     "lines": {
+      "part": 1,
+      "place": 10,
+      "heat": 3,
+      "pct": 15,
+      "perf": 5
+     }
+    }
+   ]
+  },
+  "checks": [
+   {
+    "name": "PB and SB never both paid on one result",
+    "ok": true,
+    "detail": "0 results paid both"
+   },
+   {
+    "name": "No duplicate scoring lines",
+    "ok": true,
+    "detail": "0 duplicated line ids of 1734"
+   },
+   {
+    "name": "Participation paid once per athlete per event",
+    "ok": true,
+    "detail": "664 participation lines for 664 athlete-events (relays: 162 legs, each leg earns participation)"
+   },
+   {
+    "name": "Standards capped at 20 per athlete per season",
+    "ok": true,
+    "detail": "3 athletes earned standards; highest season total 20"
+   },
+   {
+    "name": "School record paid once per athlete/event/season",
+    "ok": true,
+    "detail": "0 school-record lines"
+   },
+   {
+    "name": "DQ/DNF penalty on every DQ/DNF (and nothing else)",
+    "ok": true,
+    "detail": "16 penalty lines for 16 DQ/DNF athlete-results at -4 each"
+   },
+   {
+    "name": "Fumble penalties",
+    "ok": true,
+    "detail": "0 fumble lines at -5 each"
+   }
+  ],
+  "maxObserved": 53,
+  "rounds": {
+   "athleteEventsWithTwoRounds": 10,
+   "pointsFromEarlierRounds": 293,
+   "placeTypePointsFromEarlierRounds": 253,
+   "examples": [
+    {
+     "athleteId": "ilungasalerno",
+     "event": "55m Hurdles",
+     "date": "2025-12-12",
+     "rounds": [
+      {
+       "round": "PRELIM",
+       "mark": "7.85q",
+       "place": 3,
+       "total": 27
+      },
+      {
+       "round": "FINAL",
+       "mark": "7.86",
+       "place": 1,
+       "total": 31
+      }
+     ]
+    },
+    {
+     "athleteId": "madisonriccardi",
+     "event": "55m Hurdles",
+     "date": "2025-12-12",
+     "rounds": [
+      {
+       "round": "PRELIM",
+       "mark": "8.60q",
+       "place": 2,
+       "total": 29
+      },
+      {
+       "round": "FINAL",
+       "mark": "8.42",
+       "place": 1,
+       "total": 31
+      }
+     ]
+    },
+    {
+     "athleteId": "madisonriccardi",
+     "event": "55m Hurdles",
+     "date": "2026-01-02",
+     "rounds": [
+      {
+       "round": "PRELIM",
+       "mark": "8.32q",
+       "place": 7,
+       "total": 16
+      },
+      {
+       "round": "FINAL",
+       "mark": "8.35",
+       "place": 8,
+       "total": 13
+      }
+     ]
+    },
+    {
+     "athleteId": "ilungasalerno",
+     "event": "55m Hurdles",
+     "date": "2026-01-09",
+     "rounds": [
+      {
+       "round": "PRELIM",
+       "mark": "7.75q",
+       "place": 1,
+       "total": 35
+      },
+      {
+       "round": "FINAL",
+       "mark": "7.73",
+       "place": 1,
+       "total": 35
+      }
+     ]
+    },
+    {
+     "athleteId": "madisonriccardi",
+     "event": "55m Hurdles",
+     "date": "2026-01-09",
+     "rounds": [
+      {
+       "round": "PRELIM",
+       "mark": "8.31q",
+       "place": 1,
+       "total": 35
+      },
+      {
+       "round": "FINAL",
+       "mark": "8.21",
+       "place": 2,
+       "total": 32
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "scenarios": {
+  "baseline": {
+   "athletes": 83,
+   "athleteMeets": 378,
+   "events": 664,
+   "totalPoints": 4916.5,
+   "perAthleteMeet": {
+    "mean": 13.01,
+    "median": 6
+   },
+   "perEvent": {
+    "mean": 7.4,
+    "median": 3.5,
+    "max": 53
+   },
+   "eventBuckets": {
+    "0-3": 48.49,
+    "4-7": 18.37,
+    "8-12": 10.99,
+    "13+": 22.14
+   },
+   "eliteVsAverage": {
+    "eliteTop10PctPerMeet": 44.07,
+    "medianAthletePerMeet": 4.9,
+    "ratio": 8.99,
+    "gap": 39.17
+   },
+   "nonPlacers": {
+    "events": 521,
+    "sharePct": 78.46,
+    "meanPoints": 3.94,
+    "shareOfPointsPct": 41.77
+   },
+   "inflationPct": 0,
+   "matchups": {
+    "games": 16,
+    "flipsVsBaseline": null
+   },
+   "draftRounds": [
+    {
+     "round": 1,
+     "athletes": 4,
+     "meanPerMeet": 27.57
+    },
+    {
+     "round": 2,
+     "athletes": 4,
+     "meanPerMeet": 21.96
+    },
+    {
+     "round": 3,
+     "athletes": 3,
+     "meanPerMeet": 9.02
+    },
+    {
+     "round": 4,
+     "athletes": 3,
+     "meanPerMeet": 13.3
+    },
+    {
+     "round": 5,
+     "athletes": 3,
+     "meanPerMeet": 13.03
+    },
+    {
+     "round": 6,
+     "athletes": 3,
+     "meanPerMeet": 7.93
+    }
+   ],
+   "seasonRankProxy": [
+    {
+     "tier": 1,
+     "athletes": 4,
+     "meanPerMeet": 60.02
+    },
+    {
+     "tier": 2,
+     "athletes": 4,
+     "meanPerMeet": 27.62
+    },
+    {
+     "tier": 3,
+     "athletes": 4,
+     "meanPerMeet": 23.41
+    },
+    {
+     "tier": 4,
+     "athletes": 4,
+     "meanPerMeet": 18.09
+    },
+    {
+     "tier": 5,
+     "athletes": 4,
+     "meanPerMeet": 10.18
+    },
+    {
+     "tier": 6,
+     "athletes": 4,
+     "meanPerMeet": 9.5
+    },
+    {
+     "tier": 7,
+     "athletes": 4,
+     "meanPerMeet": 8.21
+    },
+    {
+     "tier": 8,
+     "athletes": 4,
+     "meanPerMeet": 9.2
+    }
+   ]
+  },
+  "testA": {
+   "athletes": 83,
+   "athleteMeets": 378,
+   "events": 664,
+   "totalPoints": 4041,
+   "perAthleteMeet": {
+    "mean": 10.69,
+    "median": 6
+   },
+   "perEvent": {
+    "mean": 6.09,
+    "median": 3.5,
+    "max": 40
+   },
+   "eventBuckets": {
+    "0-3": 48.49,
+    "4-7": 18.52,
+    "8-12": 15.06,
+    "13+": 17.92
+   },
+   "eliteVsAverage": {
+    "eliteTop10PctPerMeet": 32.62,
+    "medianAthletePerMeet": 4.9,
+    "ratio": 6.66,
+    "gap": 27.72
+   },
+   "nonPlacers": {
+    "events": 521,
+    "sharePct": 78.46,
+    "meanPoints": 3.94,
+    "shareOfPointsPct": 50.82
+   },
+   "inflationPct": -17.81,
+   "matchups": {
+    "games": 16,
+    "flipsVsBaseline": 1
+   },
+   "draftRounds": [
+    {
+     "round": 1,
+     "athletes": 4,
+     "meanPerMeet": 20.84
+    },
+    {
+     "round": 2,
+     "athletes": 4,
+     "meanPerMeet": 17.66
+    },
+    {
+     "round": 3,
+     "athletes": 3,
+     "meanPerMeet": 7.91
+    },
+    {
+     "round": 4,
+     "athletes": 3,
+     "meanPerMeet": 11.6
+    },
+    {
+     "round": 5,
+     "athletes": 3,
+     "meanPerMeet": 11.83
+    },
+    {
+     "round": 6,
+     "athletes": 3,
+     "meanPerMeet": 7.24
+    }
+   ],
+   "seasonRankProxy": [
+    {
+     "tier": 1,
+     "athletes": 4,
+     "meanPerMeet": 41.62
+    },
+    {
+     "tier": 2,
+     "athletes": 4,
+     "meanPerMeet": 22.76
+    },
+    {
+     "tier": 3,
+     "athletes": 4,
+     "meanPerMeet": 19.35
+    },
+    {
+     "tier": 4,
+     "athletes": 4,
+     "meanPerMeet": 15.08
+    },
+    {
+     "tier": 5,
+     "athletes": 4,
+     "meanPerMeet": 9.59
+    },
+    {
+     "tier": 6,
+     "athletes": 4,
+     "meanPerMeet": 8.61
+    },
+    {
+     "tier": 7,
+     "athletes": 4,
+     "meanPerMeet": 7.61
+    },
+    {
+     "tier": 8,
+     "athletes": 4,
+     "meanPerMeet": 7.93
+    }
+   ]
+  },
+  "testB": {
+   "athletes": 83,
+   "athleteMeets": 378,
+   "events": 664,
+   "totalPoints": 5580.5,
+   "perAthleteMeet": {
+    "mean": 14.76,
+    "median": 7.75
+   },
+   "perEvent": {
+    "mean": 8.4,
+    "median": 4.5,
+    "max": 54
+   },
+   "eventBuckets": {
+    "0-3": 43.67,
+    "4-7": 18.83,
+    "8-12": 13.55,
+    "13+": 23.95
+   },
+   "eliteVsAverage": {
+    "eliteTop10PctPerMeet": 46.58,
+    "medianAthletePerMeet": 6.63,
+    "ratio": 7.03,
+    "gap": 39.95
+   },
+   "nonPlacers": {
+    "events": 521,
+    "sharePct": 78.46,
+    "meanPoints": 4.94,
+    "shareOfPointsPct": 46.13
+   },
+   "inflationPct": 13.51,
+   "matchups": {
+    "games": 16,
+    "flipsVsBaseline": 0
+   },
+   "draftRounds": [
+    {
+     "round": 1,
+     "athletes": 4,
+     "meanPerMeet": 29.5
+    },
+    {
+     "round": 2,
+     "athletes": 4,
+     "meanPerMeet": 24.04
+    },
+    {
+     "round": 3,
+     "athletes": 3,
+     "meanPerMeet": 11.51
+    },
+    {
+     "round": 4,
+     "athletes": 3,
+     "meanPerMeet": 15.08
+    },
+    {
+     "round": 5,
+     "athletes": 3,
+     "meanPerMeet": 14.69
+    },
+    {
+     "round": 6,
+     "athletes": 3,
+     "meanPerMeet": 10.09
+    }
+   ],
+   "seasonRankProxy": [
+    {
+     "tier": 1,
+     "athletes": 4,
+     "meanPerMeet": 62.77
+    },
+    {
+     "tier": 2,
+     "athletes": 4,
+     "meanPerMeet": 29.79
+    },
+    {
+     "tier": 3,
+     "athletes": 4,
+     "meanPerMeet": 25.65
+    },
+    {
+     "tier": 4,
+     "athletes": 4,
+     "meanPerMeet": 19.85
+    },
+    {
+     "tier": 5,
+     "athletes": 4,
+     "meanPerMeet": 12.23
+    },
+    {
+     "tier": 6,
+     "athletes": 4,
+     "meanPerMeet": 11.02
+    },
+    {
+     "tier": 7,
+     "athletes": 4,
+     "meanPerMeet": 9.95
+    },
+    {
+     "tier": 8,
+     "athletes": 4,
+     "meanPerMeet": 10.86
+    }
+   ]
+  }
+ },
+ "note": "Read-only. Nothing was published; Main League scoring is unchanged."
+}

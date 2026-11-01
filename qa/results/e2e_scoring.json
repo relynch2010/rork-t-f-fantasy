@@ -1,0 +1,978 @@
+{
+ "live": {
+  "1_partial": {
+   "results": 78,
+   "provisional": 78,
+   "lines": 103,
+   "points": 128,
+   "duplicateLineIds": 0,
+   "duplicateAthleteEvent": 0,
+   "teams": {
+    "u91aacb7596f641f3b99ef0a": {
+     "server": 12,
+     "starters": 12.0,
+     "ok": true
+    },
+    "u9fe030e8f9044b99aee78ae": {
+     "server": 9,
+     "starters": 9.0,
+     "ok": true
+    },
+    "ud11e688e137f4d0ea6f29e8": {
+     "server": 6,
+     "starters": 6.0,
+     "ok": true
+    },
+    "u4dc0963e75984a558e7b691": {
+     "server": 9,
+     "starters": 9.0,
+     "ok": true
+    }
+   },
+   "teamsOk": true,
+   "liveActivity": [
+    {
+     "side": "u91aacb7596f641f3b99ef0a",
+     "content": {
+      "myScore": 12,
+      "oppScore": 9,
+      "myProj": 12,
+      "oppProj": 9,
+      "leagueName": "QA Audit Sandbox",
+      "myLeader": "Ben 7",
+      "status": "LIVE",
+      "detail": "You're leading"
+     }
+    },
+    {
+     "side": "u4dc0963e75984a558e7b691",
+     "content": {
+      "myScore": 9,
+      "oppScore": 12,
+      "myProj": 9,
+      "oppProj": 12,
+      "leagueName": "QA Audit Sandbox",
+      "myLeader": "Quetzi 5",
+      "status": "LIVE",
+      "detail": "Down 3"
+     }
+    }
+   ],
+   "liveActivityMatchesScores": true,
+   "liveActivityHasProjection": true
+  },
+  "2_full": {
+   "results": 77,
+   "provisional": 0,
+   "lines": 135,
+   "points": 381,
+   "duplicateLineIds": 0,
+   "duplicateAthleteEvent": 0,
+   "teams": {
+    "u91aacb7596f641f3b99ef0a": {
+     "server": 34,
+     "starters": 34.0,
+     "ok": true
+    },
+    "u9fe030e8f9044b99aee78ae": {
+     "server": 58,
+     "starters": 58.0,
+     "ok": true
+    },
+    "ud11e688e137f4d0ea6f29e8": {
+     "server": 26,
+     "starters": 26.0,
+     "ok": true
+    },
+    "u4dc0963e75984a558e7b691": {
+     "server": 55,
+     "starters": 55.0,
+     "ok": true
+    }
+   },
+   "teamsOk": true,
+   "liveActivity": [
+    {
+     "side": "u91aacb7596f641f3b99ef0a",
+     "content": {
+      "myScore": 34,
+      "oppScore": 55,
+      "myProj": 34,
+      "oppProj": 55,
+      "leagueName": "QA Audit Sandbox",
+      "myLeader": "Colin 20",
+      "status": "LIVE",
+      "detail": "Down 21"
+     }
+    },
+    {
+     "side": "u4dc0963e75984a558e7b691",
+     "content": {
+      "myScore": 55,
+      "oppScore": 34,
+      "myProj": 55,
+      "oppProj": 34,
+      "leagueName": "QA Audit Sandbox",
+      "myLeader": "Madeline 26",
+      "status": "LIVE",
+      "detail": "You're leading"
+     }
+    }
+   ],
+   "liveActivityMatchesScores": true,
+   "liveActivityHasProjection": true
+  },
+  "3_resync": {
+   "results": 77,
+   "provisional": 0,
+   "lines": 135,
+   "points": 381,
+   "duplicateLineIds": 0,
+   "duplicateAthleteEvent": 0,
+   "teams": {
+    "u91aacb7596f641f3b99ef0a": {
+     "server": 34,
+     "starters": 34.0,
+     "ok": true
+    },
+    "u9fe030e8f9044b99aee78ae": {
+     "server": 58,
+     "starters": 58.0,
+     "ok": true
+    },
+    "ud11e688e137f4d0ea6f29e8": {
+     "server": 26,
+     "starters": 26.0,
+     "ok": true
+    },
+    "u4dc0963e75984a558e7b691": {
+     "server": 55,
+     "starters": 55.0,
+     "ok": true
+    }
+   },
+   "teamsOk": true,
+   "liveActivity": [
+    {
+     "side": "u91aacb7596f641f3b99ef0a",
+     "content": {
+      "myScore": 34,
+      "oppScore": 55,
+      "myProj": 34,
+      "oppProj": 55,
+      "leagueName": "QA Audit Sandbox",
+      "myLeader": "Colin 20",
+      "status": "LIVE",
+      "detail": "Down 21"
+     }
+    },
+    {
+     "side": "u4dc0963e75984a558e7b691",
+     "content": {
+      "myScore": 55,
+      "oppScore": 34,
+      "myProj": 55,
+      "oppProj": 34,
+      "leagueName": "QA Audit Sandbox",
+      "myLeader": "Madeline 26",
+      "status": "LIVE",
+      "detail": "You're leading"
+     }
+    }
+   ],
+   "liveActivityMatchesScores": true,
+   "liveActivityHasProjection": true
+  },
+  "4_final": {
+   "results": 77,
+   "provisional": 0,
+   "lines": 135,
+   "points": 381,
+   "duplicateLineIds": 0,
+   "duplicateAthleteEvent": 0,
+   "teams": {
+    "u91aacb7596f641f3b99ef0a": {
+     "server": 34,
+     "starters": 34.0,
+     "ok": true
+    },
+    "u9fe030e8f9044b99aee78ae": {
+     "server": 58,
+     "starters": 58.0,
+     "ok": true
+    },
+    "ud11e688e137f4d0ea6f29e8": {
+     "server": 26,
+     "starters": 26.0,
+     "ok": true
+    },
+    "u4dc0963e75984a558e7b691": {
+     "server": 55,
+     "starters": 55.0,
+     "ok": true
+    }
+   },
+   "teamsOk": true,
+   "liveActivity": [
+    {
+     "side": "u91aacb7596f641f3b99ef0a",
+     "content": {
+      "myScore": 34,
+      "oppScore": 55,
+      "myProj": 34,
+      "oppProj": 55,
+      "leagueName": "QA Audit Sandbox",
+      "myLeader": "Colin 20",
+      "status": "LIVE",
+      "detail": "Down 21"
+     }
+    },
+    {
+     "side": "u4dc0963e75984a558e7b691",
+     "content": {
+      "myScore": 55,
+      "oppScore": 34,
+      "myProj": 55,
+      "oppProj": 34,
+      "leagueName": "QA Audit Sandbox",
+      "myLeader": "Madeline 26",
+      "status": "LIVE",
+      "detail": "You're leading"
+     }
+    }
+   ],
+   "liveActivityMatchesScores": true,
+   "liveActivityHasProjection": true
+  },
+  "resyncIdentical": true,
+  "noDoubleCount": true,
+  "scoresMovedPartialToFull": true,
+  "finalNoProvisional": true
+ },
+ "check": {
+  "results": 518,
+  "lines": 1249,
+  "byCode": {
+   "part": 634,
+   "best": 169,
+   "perf": 206,
+   "pct": 221,
+   "std": 3,
+   "dq": 16
+  },
+  "expectedLines": 1249,
+  "missing": [],
+  "extra": [],
+  "pointDiffs": [],
+  "allMatch": true,
+  "eventsScored": {
+   "1000m": [
+    "B",
+    "G"
+   ],
+   "1500m": [
+    "B",
+    "G"
+   ],
+   "1500mracewalk": [
+    "G"
+   ],
+   "1600m": [
+    "B",
+    "G"
+   ],
+   "200m": [
+    "B",
+    "G"
+   ],
+   "2mile": [
+    "B",
+    "G"
+   ],
+   "3000m": [
+    "G"
+   ],
+   "300m": [
+    "B",
+    "G"
+   ],
+   "3200m": [
+    "B"
+   ],
+   "400m": [
+    "B",
+    "G"
+   ],
+   "500m": [
+    "B",
+    "G"
+   ],
+   "55m": [
+    "B",
+    "G"
+   ],
+   "55mhurdles": [
+    "B",
+    "G"
+   ],
+   "600m": [
+    "B",
+    "G"
+   ],
+   "800m": [
+    "B",
+    "G"
+   ],
+   "highjump": [
+    "B",
+    "G"
+   ],
+   "longjump": [
+    "B",
+    "G"
+   ],
+   "mile": [
+    "B",
+    "G"
+   ],
+   "polevault": [
+    "B"
+   ],
+   "shotput": [
+    "B",
+    "G"
+   ],
+   "triplejump": [
+    "B",
+    "G"
+   ],
+   "weightthrow": [
+    "B",
+    "G"
+   ]
+  },
+  "resultSeasons": [
+   2026
+  ],
+  "eventsWithoutTableForSeason": [],
+  "okResultsWithoutPerfLine": {
+   "B Mile": 17,
+   "B 600m": 15,
+   "B 55m Hurdles": 15,
+   "B 400m": 14,
+   "G 55m": 14,
+   "B Shot Put": 14,
+   "G 300m": 14,
+   "G 1500m": 14,
+   "G 55m Hurdles": 13,
+   "G 600m": 12,
+   "G 400m": 12,
+   "G Shot Put": 11,
+   "G Mile": 9,
+   "G Long Jump": 7,
+   "B 3200m": 6,
+   "B 2 Mile": 6,
+   "B 55m": 6,
+   "B 300m": 5,
+   "G 200m": 5,
+   "G 3000m": 5,
+   "B 1000m": 5,
+   "B Long Jump": 5,
+   "G 800m": 4,
+   "G 2 Mile": 4,
+   "B 1600m": 3,
+   "G Weight Throw": 3,
+   "G 1000m": 3,
+   "B High Jump": 3,
+   "G 1500m Racewalk": 3,
+   "G 1600m": 2,
+   "G High Jump": 2,
+   "B Weight Throw": 2,
+   "B 500m": 2,
+   "B Pole Vault": 1,
+   "B 200m": 1,
+   "G 500m": 1,
+   "B 800m": 1,
+   "B Triple Jump": 1
+  },
+  "rulesWeek1": {
+   "enabled": {},
+   "applies": {},
+   "participation": 1,
+   "overall": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "relay": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "pb": 5,
+   "sb": 2,
+   "bestMode": "single",
+   "heat": [
+    0,
+    0,
+    0
+   ],
+   "percentile": [
+    {
+     "pct": 0.05,
+     "pts": 15
+    },
+    {
+     "pct": 0.1,
+     "pts": 12
+    },
+    {
+     "pct": 0.2,
+     "pts": 8
+    },
+    {
+     "pct": 0.3,
+     "pts": 5
+    },
+    {
+     "pct": 0.4,
+     "pts": 2
+    }
+   ],
+   "percentileUnseeded": [
+    {
+     "pct": 0.05,
+     "pts": 10
+    },
+    {
+     "pct": 0.1,
+     "pts": 7
+    },
+    {
+     "pct": 0.2,
+     "pts": 5
+    },
+    {
+     "pct": 0.3,
+     "pts": 3
+    },
+    {
+     "pct": 0.4,
+     "pts": 1
+    }
+   ],
+   "standardCap": 20,
+   "schoolRecord": 20,
+   "fumble": -3,
+   "dqdnf": -4
+  }
+ },
+ "rules": {
+  "publish": {
+   "ok": true,
+   "message": "No changes: these rules are already live in this test league.",
+   "finishedWeeksUnchanged": null
+  },
+  "variant": {
+   "overall": [
+    10,
+    8,
+    6,
+    4,
+    2,
+    1
+   ],
+   "relay": [
+    8,
+    6,
+    4
+   ],
+   "heat": [
+    3,
+    2,
+    1
+   ],
+   "percentileUnseeded": [
+    {
+     "pct": 0.05,
+     "pts": 6
+    },
+    {
+     "pct": 0.1,
+     "pts": 4
+    },
+    {
+     "pct": 0.2,
+     "pts": 3
+    },
+    {
+     "pct": 0.3,
+     "pts": 2
+    },
+    {
+     "pct": 0.4,
+     "pts": 1
+    }
+   ]
+  },
+  "week": 7,
+  "athlete": "beyasalerno"
+ },
+ "checkVariant": {
+  "results": 518,
+  "lines": 1547,
+  "byCode": {
+   "part": 634,
+   "heat": 203,
+   "best": 169,
+   "perf": 206,
+   "pct": 221,
+   "place": 93,
+   "std": 3,
+   "dq": 16,
+   "sr": 1,
+   "fumble": 1
+  },
+  "expectedLines": 1547,
+  "missing": [],
+  "extra": [],
+  "pointDiffs": [],
+  "allMatch": true,
+  "eventsScored": {
+   "1000m": [
+    "B",
+    "G"
+   ],
+   "1500m": [
+    "B",
+    "G"
+   ],
+   "1500mracewalk": [
+    "G"
+   ],
+   "1600m": [
+    "B",
+    "G"
+   ],
+   "200m": [
+    "B",
+    "G"
+   ],
+   "2mile": [
+    "B",
+    "G"
+   ],
+   "3000m": [
+    "G"
+   ],
+   "300m": [
+    "B",
+    "G"
+   ],
+   "3200m": [
+    "B"
+   ],
+   "400m": [
+    "B",
+    "G"
+   ],
+   "500m": [
+    "B",
+    "G"
+   ],
+   "55m": [
+    "B",
+    "G"
+   ],
+   "55mhurdles": [
+    "B",
+    "G"
+   ],
+   "600m": [
+    "B",
+    "G"
+   ],
+   "800m": [
+    "B",
+    "G"
+   ],
+   "highjump": [
+    "B",
+    "G"
+   ],
+   "longjump": [
+    "B",
+    "G"
+   ],
+   "mile": [
+    "B",
+    "G"
+   ],
+   "polevault": [
+    "B"
+   ],
+   "shotput": [
+    "B",
+    "G"
+   ],
+   "triplejump": [
+    "B",
+    "G"
+   ],
+   "weightthrow": [
+    "B",
+    "G"
+   ]
+  },
+  "resultSeasons": [
+   2026
+  ],
+  "eventsWithoutTableForSeason": [],
+  "okResultsWithoutPerfLine": {
+   "B Mile": 17,
+   "B 600m": 15,
+   "B 55m Hurdles": 15,
+   "B 400m": 14,
+   "G 55m": 14,
+   "B Shot Put": 14,
+   "G 300m": 14,
+   "G 1500m": 14,
+   "G 55m Hurdles": 13,
+   "G 600m": 12,
+   "G 400m": 12,
+   "G Shot Put": 11,
+   "G Mile": 9,
+   "G Long Jump": 7,
+   "B 3200m": 6,
+   "B 2 Mile": 6,
+   "B 55m": 6,
+   "B 300m": 5,
+   "G 200m": 5,
+   "G 3000m": 5,
+   "B 1000m": 5,
+   "B Long Jump": 5,
+   "G 800m": 4,
+   "G 2 Mile": 4,
+   "B 1600m": 3,
+   "G Weight Throw": 3,
+   "G 1000m": 3,
+   "B High Jump": 3,
+   "G 1500m Racewalk": 3,
+   "G 1600m": 2,
+   "G High Jump": 2,
+   "B Weight Throw": 2,
+   "B 500m": 2,
+   "B Pole Vault": 1,
+   "B 200m": 1,
+   "G 500m": 1,
+   "B 800m": 1,
+   "B Triple Jump": 1
+  },
+  "rulesWeek1": {
+   "enabled": {},
+   "applies": {},
+   "participation": 1,
+   "overall": [
+    10,
+    8,
+    6,
+    4,
+    2,
+    1
+   ],
+   "relay": [
+    8,
+    6,
+    4
+   ],
+   "pb": 5,
+   "sb": 2,
+   "bestMode": "single",
+   "heat": [
+    3,
+    2,
+    1
+   ],
+   "percentile": [
+    {
+     "pct": 0.05,
+     "pts": 15
+    },
+    {
+     "pct": 0.1,
+     "pts": 12
+    },
+    {
+     "pct": 0.2,
+     "pts": 8
+    },
+    {
+     "pct": 0.3,
+     "pts": 5
+    },
+    {
+     "pct": 0.4,
+     "pts": 2
+    }
+   ],
+   "percentileUnseeded": [
+    {
+     "pct": 0.05,
+     "pts": 6
+    },
+    {
+     "pct": 0.1,
+     "pts": 4
+    },
+    {
+     "pct": 0.2,
+     "pts": 3
+    },
+    {
+     "pct": 0.3,
+     "pts": 2
+    },
+    {
+     "pct": 0.4,
+     "pts": 1
+    }
+   ],
+   "standardCap": 20,
+   "schoolRecord": 20,
+   "fumble": -3,
+   "dqdnf": -4
+  }
+ },
+ "checkWithRecords": {
+  "results": 518,
+  "lines": 1251,
+  "byCode": {
+   "part": 634,
+   "best": 169,
+   "perf": 206,
+   "pct": 221,
+   "std": 3,
+   "dq": 16,
+   "sr": 1,
+   "fumble": 1
+  },
+  "expectedLines": 1251,
+  "missing": [],
+  "extra": [],
+  "pointDiffs": [],
+  "allMatch": true,
+  "eventsScored": {
+   "1000m": [
+    "B",
+    "G"
+   ],
+   "1500m": [
+    "B",
+    "G"
+   ],
+   "1500mracewalk": [
+    "G"
+   ],
+   "1600m": [
+    "B",
+    "G"
+   ],
+   "200m": [
+    "B",
+    "G"
+   ],
+   "2mile": [
+    "B",
+    "G"
+   ],
+   "3000m": [
+    "G"
+   ],
+   "300m": [
+    "B",
+    "G"
+   ],
+   "3200m": [
+    "B"
+   ],
+   "400m": [
+    "B",
+    "G"
+   ],
+   "500m": [
+    "B",
+    "G"
+   ],
+   "55m": [
+    "B",
+    "G"
+   ],
+   "55mhurdles": [
+    "B",
+    "G"
+   ],
+   "600m": [
+    "B",
+    "G"
+   ],
+   "800m": [
+    "B",
+    "G"
+   ],
+   "highjump": [
+    "B",
+    "G"
+   ],
+   "longjump": [
+    "B",
+    "G"
+   ],
+   "mile": [
+    "B",
+    "G"
+   ],
+   "polevault": [
+    "B"
+   ],
+   "shotput": [
+    "B",
+    "G"
+   ],
+   "triplejump": [
+    "B",
+    "G"
+   ],
+   "weightthrow": [
+    "B",
+    "G"
+   ]
+  },
+  "resultSeasons": [
+   2026
+  ],
+  "eventsWithoutTableForSeason": [],
+  "okResultsWithoutPerfLine": {
+   "B Mile": 17,
+   "B 600m": 15,
+   "B 55m Hurdles": 15,
+   "B 400m": 14,
+   "G 55m": 14,
+   "B Shot Put": 14,
+   "G 300m": 14,
+   "G 1500m": 14,
+   "G 55m Hurdles": 13,
+   "G 600m": 12,
+   "G 400m": 12,
+   "G Shot Put": 11,
+   "G Mile": 9,
+   "G Long Jump": 7,
+   "B 3200m": 6,
+   "B 2 Mile": 6,
+   "B 55m": 6,
+   "B 300m": 5,
+   "G 200m": 5,
+   "G 3000m": 5,
+   "B 1000m": 5,
+   "B Long Jump": 5,
+   "G 800m": 4,
+   "G 2 Mile": 4,
+   "B 1600m": 3,
+   "G Weight Throw": 3,
+   "G 1000m": 3,
+   "B High Jump": 3,
+   "G 1500m Racewalk": 3,
+   "G 1600m": 2,
+   "G High Jump": 2,
+   "B Weight Throw": 2,
+   "B 500m": 2,
+   "B Pole Vault": 1,
+   "B 200m": 1,
+   "G 500m": 1,
+   "B 800m": 1,
+   "B Triple Jump": 1
+  },
+  "rulesWeek1": {
+   "enabled": {},
+   "applies": {},
+   "participation": 1,
+   "overall": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "relay": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "pb": 5,
+   "sb": 2,
+   "bestMode": "single",
+   "heat": [
+    0,
+    0,
+    0
+   ],
+   "percentile": [
+    {
+     "pct": 0.05,
+     "pts": 15
+    },
+    {
+     "pct": 0.1,
+     "pts": 12
+    },
+    {
+     "pct": 0.2,
+     "pts": 8
+    },
+    {
+     "pct": 0.3,
+     "pts": 5
+    },
+    {
+     "pct": 0.4,
+     "pts": 2
+    }
+   ],
+   "percentileUnseeded": [
+    {
+     "pct": 0.05,
+     "pts": 10
+    },
+    {
+     "pct": 0.1,
+     "pts": 7
+    },
+    {
+     "pct": 0.2,
+     "pts": 5
+    },
+    {
+     "pct": 0.3,
+     "pts": 3
+    },
+    {
+     "pct": 0.4,
+     "pts": 1
+    }
+   ],
+   "standardCap": 20,
+   "schoolRecord": 20,
+   "fumble": -3,
+   "dqdnf": -4
+  }
+ }
+}
