@@ -11,9 +11,6 @@ export function SplashScreen({ label = "Loading" }: { label?: string }) {
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center" style={{ background: "linear-gradient(180deg, #04140B 0%, #0B2A18 100%)" }} aria-label={label} role="status">
       <div className="td-glow pointer-events-none absolute h-[520px] w-[520px] rounded-full" style={{ background: "radial-gradient(circle, rgba(32,196,99,0.32) 0%, transparent 60%)" }} />
       <img src="/icon.png" alt="" className="td-rise relative h-28 w-28 rounded-[30px] shadow-[0_12px_40px_rgba(32,196,99,0.45)]" />
-      <p className="td-rise font-display relative mt-6 text-4xl tracking-[0.18em] text-[#E8F5EC]" style={{ animationDelay: "0.1s" }}>T&amp;F FANTASY</p>
-      <div className="td-draw relative mt-3 h-[3px] rounded-full" style={{ background: "linear-gradient(90deg, rgba(32,196,99,0.2), #20C463, rgba(32,196,99,0.2))" }} />
-      <p className="td-rise relative mt-3 text-sm font-semibold text-[#E8F5EC]/55" style={{ animationDelay: "0.45s" }}>Track &amp; Field, drafted.</p>
     </div>
   );
 }
