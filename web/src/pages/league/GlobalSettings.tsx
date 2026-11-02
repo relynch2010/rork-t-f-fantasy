@@ -76,7 +76,7 @@ export default function GlobalSettings() {
   const gnum = (k: keyof GameSettings, step = 1) => num(game[k] as number, (n) => setGame({ ...game, [k]: n }), step);
 
   return (
-    <div>
+    <div className="min-h-screen min-w-0 pb-8">
       <PageHeader
         eyebrow={<span className="flex items-center gap-1.5 text-td-gold"><Crown className="h-3.5 w-3.5" /> Main League • {league.mainLeagueCode}</span> as unknown as string}
         title={can ? "Global Game Settings" : "Game Rules"}
