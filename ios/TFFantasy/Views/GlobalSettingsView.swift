@@ -64,6 +64,9 @@ struct GlobalSettingsView: View {
             }
         }
         .screenBackground()
+        // Keep this Form independently scrollable even when hosted inside a parent container.
+        .scrollDisabled(false)
+        .scrollBounceBehavior(.always)
         .disabled(!(store.league?.canEditGlobalSettings ?? false) || store.isBusy)
         .navigationTitle("Global Game Settings")
         .navigationBarTitleDisplayMode(.inline)
